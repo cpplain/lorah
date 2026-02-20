@@ -1,0 +1,21 @@
+# Go build artifacts
+/lorah
+/lorah.exe
+
+# Go test artifacts
+*.test
+coverage.out
+coverage.html
+
+# Vendor directory
+vendor/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Environment files
+.env

@@ -1,0 +1,63 @@
+{
+  "_comment": "Claude.ai Clone - Lorah Configuration. Recreates the original autonomous coding demo using the generic harness.",
+
+  "model": "claude-sonnet-4-5-20250929",
+
+  "max_turns": 1000,
+  "auto_continue_delay": 3,
+
+  "tools": {
+    "builtin": ["Read", "Write", "Edit", "Glob", "Grep", "Bash"],
+    "mcp_servers": {
+      "puppeteer": {
+        "command": "npx",
+        "args": ["puppeteer-mcp-server"]
+      }
+    }
+  },
+
+  "security": {
+    "permission_mode": "acceptEdits",
+    "sandbox": {
+      "enabled": true,
+      "auto_allow_bash_if_sandboxed": true,
+      "allow_unsandboxed_commands": false,
+      "network": {
+        "allowed_domains": ["registry.npmjs.org", "github.com"],
+        "allow_local_binding": true
+      }
+    },
+    "permissions": {
+      "allow": [
+        "Bash(ls *)",
+        "Bash(cat *)",
+        "Bash(head *)",
+        "Bash(tail *)",
+        "Bash(wc *)",
+        "Bash(grep *)",
+        "Bash(cp *)",
+        "Bash(mkdir *)",
+        "Bash(chmod *)",
+        "Bash(pwd)",
+        "Bash(ps *)",
+        "Bash(lsof *)",
+        "Bash(sleep *)",
+        "Bash(pkill *)",
+        "Bash(npm *)",
+        "Bash(node *)",
+        "Bash(git *)",
+        "Bash(./init.sh)"
+      ],
+      "deny": ["Bash(curl *)", "Bash(wget *)"]
+    }
+  },
+
+  "error_recovery": {
+    "max_consecutive_errors": 5,
+    "initial_backoff_seconds": 5.0,
+    "max_backoff_seconds": 120.0,
+    "backoff_multiplier": 2.0
+  },
+
+  "post_run_instructions": ["npm install", "npm run dev"]
+}

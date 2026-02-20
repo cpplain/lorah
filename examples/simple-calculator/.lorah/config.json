@@ -1,0 +1,38 @@
+{
+  "_comment": "Simple Calculator - Minimal Lorah Example",
+
+  "model": "claude-sonnet-4-5-20250929",
+
+  "max_turns": 1000,
+  "auto_continue_delay": 3,
+  "max_iterations": 10,
+
+  "tools": {
+    "builtin": ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
+  },
+
+  "security": {
+    "permission_mode": "acceptEdits",
+    "sandbox": {
+      "enabled": true,
+      "auto_allow_bash_if_sandboxed": true,
+      "network": {
+        "allowed_domains": [],
+        "allow_local_binding": false
+      }
+    },
+    "permissions": {
+      "allow": ["Bash(python *)", "Bash(ls *)", "Bash(cat *)", "Bash(git *)"],
+      "deny": []
+    }
+  },
+
+  "error_recovery": {
+    "max_consecutive_errors": 5,
+    "initial_backoff_seconds": 5.0,
+    "max_backoff_seconds": 120.0,
+    "backoff_multiplier": 2.0
+  },
+
+  "post_run_instructions": ["python -m unittest test_calculator -v"]
+}

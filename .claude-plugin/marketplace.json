@@ -1,0 +1,12 @@
+{
+  "name": "lorah-plugin",
+  "owner": {
+    "name": "Christopher Plain"
+  },
+  "plugins": [
+    {
+      "name": "lorah",
+      "source": "./plugin"
+    }
+  ]
+}

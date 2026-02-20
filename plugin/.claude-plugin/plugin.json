@@ -1,0 +1,10 @@
+{
+  "name": "lorah",
+  "version": "0.1.0",
+  "description": "Claude Code access to lorah CLI",
+  "author": {
+    "name": "Christopher Plain"
+  },
+  "homepage": "https://github.com/cpplain/lorah",
+  "repository": "https://github.com/cpplain/lorah"
+}

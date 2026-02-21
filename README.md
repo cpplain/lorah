@@ -79,29 +79,32 @@ Lorah executes each phase sequentially. The agent reads your spec and builds you
 
 ## How It Works
 
-Lorah runs a loop that executes **phases** sequentially. Each phase invokes the Claude Code CLI subprocess with a configured prompt. This design follows the patterns described in Anthropic's [Effective Harnesses for Long-Running Agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) article.
+Lorah runs a two-phase execution loop: **initialization** (runs once) and **implementation** (iterative). Each phase invokes the Claude Code CLI subprocess in an isolated session with its corresponding prompt. This design follows the patterns described in Anthropic's [Effective Harnesses for Long-Running Agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) article.
 
-Configuration is driven entirely by `.lorah/config.json`:
+Configuration is driven by `.lorah/config.json`:
 
 ```json
 {
-  "model": "claude-opus-4-6",
-  "permission_mode": "prompt",
-  "phases": [
-    {
-      "name": "initialization",
-      "prompt": "file:prompts/initialization.md",
-      "run_once": true
-    },
-    {
-      "name": "implementation",
-      "prompt": "file:prompts/implementation.md"
+  "model": "claude-sonnet-4-5",
+  "max_iterations": 10,
+  "security": {
+    "sandbox": {
+      "network": {
+        "allowed_domains": ["registry.npmjs.org"]
+      }
     }
-  ]
+  }
 }
 ```
 
-Phases can be `run_once` (skip after first completion) and have path-based conditions (`exists:`, `not_exists:`). Session state persists in `.lorah/session.json`.
+The harness uses fixed file names:
+
+- `prompts/initialization.md` - one-time setup phase
+- `prompts/implementation.md` - iterative build phase
+- `tasks.json` - progress tracking checklist
+- `progress.md` - session handoff notes
+
+Session state persists in `.lorah/session.json`.
 
 ## License
 

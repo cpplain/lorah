@@ -444,4 +444,4 @@ Once you're comfortable with the basic setup, explore:
 - **[Examples](../examples/)** - Real-world project setups
   - [Simple Calculator](../examples/simple-calculator/) - Python, completes in ~5 minutes
   - [Claude.ai Clone](../examples/claude-ai-clone/) - Next.js with MCP browser automation
-- **[Main README](../README.md)** - Technical details on how the harness works
+- **[Main README](../../README.md)** - Technical details on how the harness works

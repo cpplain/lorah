@@ -1,4 +1,4 @@
-## YOUR ROLE - FIX PHASE
+## YOUR ROLE - IMPLEMENTATION PHASE
 
 You are fixing ONE issue this session. The harness will auto-continue with fresh sessions until all issues pass.
 
@@ -6,8 +6,8 @@ You are fixing ONE issue this session. The harness will auto-continue with fresh
 
 ```bash
 pwd
-cat .lorah/review-issues.json
-cat .lorah/review-progress.txt
+cat .lorah/tasks.json
+cat .lorah/progress.md
 git log --oneline -5
 ```
 
@@ -24,7 +24,7 @@ If a regression is found, set that item back to `"passes": false` and treat it a
 
 ### STEP 3: Pick ONE Issue
 
-Find the first item in `review-issues.json` with `"passes": false`.
+Find the first item in `tasks.json` with `"passes": false`.
 
 **The list is priority-ordered.** Work top-to-bottom. Do not skip ahead.
 
@@ -60,11 +60,11 @@ Only accept a fix when you are confident it is correct — not merely plausible.
 
 ### STEP 6: Update Tracking
 
-Set `"passes": true` for THIS issue only in `review-issues.json`. Do NOT touch any other items.
+Set `"passes": true` for THIS issue only in `tasks.json`. Do NOT touch any other items.
 
 ### STEP 7: Document Progress
 
-Append to `.lorah/review-progress.txt`:
+Append to `.lorah/progress.md`:
 
 ```text
 ## Session - [date]

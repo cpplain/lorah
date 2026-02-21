@@ -11,11 +11,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- Updated README.md to document two-phase execution model with fixed file names
+- Renamed review workflow prompts from `inventory.md`/`fix.md` to `initialization.md`/`implementation.md`
+- Updated review workflow README to use initialization/implementation terminology
+- Removed deprecated config options from review workflow example (`system_prompt`, `tracking`, `phases`)
+
 ### Deprecated
 
 ### Removed
 
 ### Fixed
+
+- Corrected broken relative link in setup-guide.md (../README.md → ../../README.md)
 
 ### Security
 

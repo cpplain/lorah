@@ -8,7 +8,7 @@ Interactive code review tends to degrade over iterations. Each review pass catch
 
 A harness-based review solves this by enforcing structure:
 
-- **Discovery before fixing** — The inventory phase catalogs all issues before any changes are made. Nothing gets missed because a fix drew attention elsewhere.
+- **Discovery before fixing** — The initialization phase catalogs all issues before any changes are made. Nothing gets missed because a fix drew attention elsewhere.
 - **Consistent criteria** — Each fix session applies the same standards. There is no drift between early and late review.
 - **Priority ordering** — Issues are ordered by priority (security → bugs → logic → performance → idiom → consistency) and fixed systematically.
 - **Built-in verification** — Each fix is verified before being marked complete. Regression checks run before new work starts.
@@ -41,9 +41,9 @@ This workflow focuses on **practical quality** — issues that affect correctnes
 
 This workflow follows Anthropic's proven two-phase pattern for autonomous agents:
 
-### 1. Inventory (runs once)
+### 1. Initialization (runs once)
 
-Reads every source file and catalogs all issues into `.lorah/review-issues.json` **ordered by priority**:
+Reads every source file and catalogs all issues into `.lorah/tasks.json` **ordered by priority**:
 
 1. Security issues (highest priority)
 2. Bugs
@@ -52,9 +52,9 @@ Reads every source file and catalogs all issues into `.lorah/review-issues.json`
 5. Idiomatic issues
 6. Consistency issues (lowest priority)
 
-No fixes are made during inventory. This separation prevents the common failure mode where early fixes distract from later discovery.
+No fixes are made during initialization. This separation prevents the common failure mode where early fixes distract from later discovery.
 
-### 2. Fix (iterative)
+### 2. Implementation (iterative)
 
 Works through the issue list from top to bottom, one issue per session. Each session:
 
@@ -80,10 +80,10 @@ lorah run
 
 After a successful run, the project directory will contain:
 
-| File                         | Description                                     |
-| ---------------------------- | ----------------------------------------------- |
-| `.lorah/review-issues.json`  | Complete issue inventory with resolution status |
-| `.lorah/review-progress.txt` | Session-by-session progress log                 |
+| File                 | Description                                     |
+| -------------------- | ----------------------------------------------- |
+| `.lorah/tasks.json`  | Complete issue inventory with resolution status |
+| `.lorah/progress.md` | Session-by-session progress log                 |
 
 Each fix is committed individually with a descriptive message, giving you a clean git history of every change made during the review.
 

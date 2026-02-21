@@ -2,7 +2,6 @@
   "_comment": "Review Workflow - Structured code review with issue inventory and systematic fixes",
 
   "model": "claude-sonnet-4-5",
-  "system_prompt": "You are an experienced software engineer performing a thorough, practical code review.",
 
   "max_turns": 1000,
   "auto_continue_delay": 3,
@@ -23,28 +22,10 @@
     }
   },
 
-  "tracking": {
-    "type": "json_checklist",
-    "file": "review-issues.json",
-    "passing_field": "passes"
-  },
-
   "error_recovery": {
     "max_consecutive_errors": 5,
     "initial_backoff_seconds": 5.0,
     "max_backoff_seconds": 120.0,
     "backoff_multiplier": 2.0
-  },
-
-  "phases": [
-    {
-      "name": "inventory",
-      "prompt": "file:prompts/inventory.md",
-      "run_once": true
-    },
-    {
-      "name": "fix",
-      "prompt": "file:prompts/fix.md"
-    }
-  ]
+  }
 }

@@ -1,4 +1,4 @@
-## YOUR ROLE - INVENTORY PHASE
+## YOUR ROLE - INITIALIZATION PHASE
 
 You are cataloging all issues in this codebase. This runs once. Do NOT make any fixes — only discover and document.
 
@@ -49,9 +49,9 @@ For each issue found, categorize it as one of:
 - "Clean Code" dogma (excessive interfaces, design patterns for their own sake)
 - Subjective naming preferences unless naming is actively misleading
 
-### STEP 4: Write review-issues.json
+### STEP 4: Write tasks.json
 
-Create `.lorah/review-issues.json` with all discovered issues **ordered by priority**:
+Create `.lorah/tasks.json` with all discovered issues **ordered by priority**:
 
 ```json
 [
@@ -85,7 +85,7 @@ Create `.lorah/review-issues.json` with all discovered issues **ordered by prior
 
 ### STEP 5: Create Progress File
 
-Create `.lorah/review-progress.txt` to track session handoffs:
+Create `.lorah/progress.md` to track session handoffs:
 
 ```text
 # Review Progress
@@ -108,7 +108,7 @@ This file gives future sessions the context they need without reading the entire
 ### STEP 6: Commit
 
 ```bash
-git add .lorah/review-issues.json .lorah/review-progress.txt
+git add .lorah/tasks.json .lorah/progress.md
 git commit -m "review: inventory complete"
 ```
 

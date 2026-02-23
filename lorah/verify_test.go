@@ -1,4 +1,4 @@
-package verify_test
+package lorah
 
 import (
 	"encoding/json"
@@ -6,21 +6,18 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/cpplain/lorah/internal/tracking"
-	"github.com/cpplain/lorah/internal/verify"
 )
 
 // TestCheckResultString tests the String() formatting of CheckResult.
 func TestCheckResultString(t *testing.T) {
 	tests := []struct {
 		name     string
-		result   verify.CheckResult
+		result   CheckResult
 		contains []string
 	}{
 		{
 			name: "PASS with message",
-			result: verify.CheckResult{
+			result: CheckResult{
 				Name:    "Go version",
 				Status:  "PASS",
 				Message: "1.21.0",
@@ -29,7 +26,7 @@ func TestCheckResultString(t *testing.T) {
 		},
 		{
 			name: "FAIL without message",
-			result: verify.CheckResult{
+			result: CheckResult{
 				Name:   "Config file",
 				Status: "FAIL",
 			},
@@ -37,7 +34,7 @@ func TestCheckResultString(t *testing.T) {
 		},
 		{
 			name: "WARN with message",
-			result: verify.CheckResult{
+			result: CheckResult{
 				Name:    "MCP servers",
 				Status:  "WARN",
 				Message: "npx not found on PATH",
@@ -46,7 +43,7 @@ func TestCheckResultString(t *testing.T) {
 		},
 		{
 			name: "result includes separator",
-			result: verify.CheckResult{
+			result: CheckResult{
 				Name:    "Authentication",
 				Status:  "PASS",
 				Message: "ANTHROPIC_API_KEY set",
@@ -69,7 +66,7 @@ func TestCheckResultString(t *testing.T) {
 
 // TestCheckResultStringNoMessage verifies that no " - " separator appears when there's no message.
 func TestCheckResultStringNoMessage(t *testing.T) {
-	result := verify.CheckResult{Name: "Test", Status: "PASS"}
+	result := CheckResult{Name: "Test", Status: "PASS"}
 	got := result.String()
 	if strings.Contains(got, " - ") {
 		t.Errorf("String() = %q; should not contain ' - ' when message is empty", got)
@@ -78,7 +75,7 @@ func TestCheckResultStringNoMessage(t *testing.T) {
 
 // TestCheckGoVersion verifies that CheckGoVersion always returns a PASS.
 func TestCheckGoVersion(t *testing.T) {
-	result := verify.CheckGoVersion()
+	result := CheckGoVersion()
 	if result.Status != "PASS" {
 		t.Errorf("CheckGoVersion().Status = %q; want PASS", result.Status)
 	}
@@ -99,7 +96,7 @@ func TestCheckConfigExists(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		result := verify.CheckConfigExists(dir)
+		result := CheckConfigExists(dir)
 		if result.Status != "PASS" {
 			t.Errorf("CheckConfigExists().Status = %q; want PASS", result.Status)
 		}
@@ -111,7 +108,7 @@ func TestCheckConfigExists(t *testing.T) {
 	t.Run("config file missing", func(t *testing.T) {
 		dir := t.TempDir()
 
-		result := verify.CheckConfigExists(dir)
+		result := CheckConfigExists(dir)
 		if result.Status != "FAIL" {
 			t.Errorf("CheckConfigExists().Status = %q; want FAIL", result.Status)
 		}
@@ -137,7 +134,7 @@ func TestCheckConfigValid(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		result, loadedCfg := verify.CheckConfigValid(dir)
+		result, loadedCfg := CheckConfigValid(dir)
 		if result.Status != "PASS" {
 			t.Errorf("CheckConfigValid().Status = %q; want PASS (message: %s)", result.Status, result.Message)
 		}
@@ -149,7 +146,7 @@ func TestCheckConfigValid(t *testing.T) {
 	t.Run("missing config dir", func(t *testing.T) {
 		dir := t.TempDir()
 
-		result, cfg := verify.CheckConfigValid(dir)
+		result, cfg := CheckConfigValid(dir)
 		if result.Status != "FAIL" {
 			t.Errorf("CheckConfigValid().Status = %q; want FAIL", result.Status)
 		}
@@ -170,7 +167,7 @@ func TestCheckConfigValid(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		result, cfg := verify.CheckConfigValid(dir)
+		result, cfg := CheckConfigValid(dir)
 		if result.Status != "FAIL" {
 			t.Errorf("CheckConfigValid().Status = %q; want FAIL", result.Status)
 		}
@@ -189,12 +186,12 @@ func TestCheckRequiredFiles(t *testing.T) {
 			t.Fatal(err)
 		}
 		// Create all required files
-		os.WriteFile(filepath.Join(harnessDir, tracking.TaskListFile), []byte("[]"), 0o644)
-		os.WriteFile(filepath.Join(harnessDir, tracking.AgentProgressFile), []byte(""), 0o644)
+		os.WriteFile(filepath.Join(harnessDir, TaskListFile), []byte("[]"), 0o644)
+		os.WriteFile(filepath.Join(harnessDir, AgentProgressFile), []byte(""), 0o644)
 		os.WriteFile(filepath.Join(harnessDir, "prompts", "initialization.md"), []byte(""), 0o644)
 		os.WriteFile(filepath.Join(harnessDir, "prompts", "implementation.md"), []byte(""), 0o644)
 
-		result := verify.CheckRequiredFiles(harnessDir)
+		result := CheckRequiredFiles(harnessDir)
 		if result.Status != "PASS" {
 			t.Errorf("CheckRequiredFiles().Status = %q; want PASS", result.Status)
 		}
@@ -205,7 +202,7 @@ func TestCheckRequiredFiles(t *testing.T) {
 		harnessDir := filepath.Join(dir, ".lorah")
 		os.MkdirAll(harnessDir, 0o755)
 
-		result := verify.CheckRequiredFiles(harnessDir)
+		result := CheckRequiredFiles(harnessDir)
 		if result.Status != "FAIL" {
 			t.Errorf("CheckRequiredFiles().Status = %q; want FAIL", result.Status)
 		}
@@ -220,7 +217,7 @@ func TestCheckProjectDir(t *testing.T) {
 	t.Run("existing writable directory", func(t *testing.T) {
 		dir := t.TempDir()
 
-		result := verify.CheckProjectDir(dir)
+		result := CheckProjectDir(dir)
 		if result.Status != "PASS" {
 			t.Errorf("CheckProjectDir(%q).Status = %q; want PASS", dir, result.Status)
 		}
@@ -233,7 +230,7 @@ func TestCheckProjectDir(t *testing.T) {
 		parentDir := t.TempDir()
 		nonExistent := filepath.Join(parentDir, "new-project")
 
-		result := verify.CheckProjectDir(nonExistent)
+		result := CheckProjectDir(nonExistent)
 		if result.Status != "PASS" {
 			t.Errorf("CheckProjectDir(%q).Status = %q; want PASS", nonExistent, result.Status)
 		}
@@ -248,7 +245,7 @@ func TestRunVerify(t *testing.T) {
 	t.Run("returns multiple results", func(t *testing.T) {
 		dir := t.TempDir()
 
-		results := verify.RunVerify(dir)
+		results := RunVerify(dir)
 		if len(results) == 0 {
 			t.Error("RunVerify() should return at least one result")
 		}
@@ -265,10 +262,10 @@ func TestRunVerify(t *testing.T) {
 	t.Run("config-dependent checks skipped when no config", func(t *testing.T) {
 		dir := t.TempDir()
 
-		results := verify.RunVerify(dir)
+		results := RunVerify(dir)
 
 		// Find config validation result
-		var configValidResult *verify.CheckResult
+		var configValidResult *CheckResult
 		for i := range results {
 			if results[i].Name == "Config validation" {
 				configValidResult = &results[i]
@@ -306,7 +303,7 @@ func TestRunVerify(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		results := verify.RunVerify(dir)
+		results := RunVerify(dir)
 
 		// Should include config-dependent checks
 		checkNames := make(map[string]bool)
@@ -335,12 +332,12 @@ func TestCheckMCPCommandsNoServers(t *testing.T) {
 	data, _ := json.Marshal(cfg)
 	os.WriteFile(filepath.Join(harnessDir, "config.json"), data, 0o644)
 
-	_, loadedCfg := verify.CheckConfigValid(dir)
+	_, loadedCfg := CheckConfigValid(dir)
 	if loadedCfg == nil {
 		t.Fatal("config should load successfully")
 	}
 
-	result := verify.CheckMCPCommands(loadedCfg)
+	result := CheckMCPCommands(loadedCfg)
 	if result.Status != "PASS" {
 		t.Errorf("CheckMCPCommands() with no servers: Status = %q; want PASS", result.Status)
 	}

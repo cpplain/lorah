@@ -1,7 +1,7 @@
-// Package verify provides setup verification checks for the agent harness.
+// Package lorah provides setup verification checks for the agent harness.
 // It checks that the environment, authentication, claude CLI, and configuration
 // are all properly set up before running the agent.
-package verify
+package lorah
 
 import (
 	"context"
@@ -14,9 +14,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/cpplain/lorah/internal/config"
-	"github.com/cpplain/lorah/internal/tracking"
 )
 
 // versionPattern extracts major.minor.patch from CLI version output.
@@ -168,8 +165,8 @@ func CheckConfigExists(harnessDir string) CheckResult {
 
 // CheckConfigValid attempts to load and validate the config file.
 // It returns both the check result and the loaded config (nil on failure).
-func CheckConfigValid(projectDir string) (CheckResult, *config.HarnessConfig) {
-	cfg, err := config.LoadConfig(projectDir, nil)
+func CheckConfigValid(projectDir string) (CheckResult, *HarnessConfig) {
+	cfg, err := LoadConfig(projectDir, nil)
 	if err != nil {
 		return CheckResult{
 			Name:    "Config validation",
@@ -186,8 +183,8 @@ func CheckRequiredFiles(harnessDir string) CheckResult {
 		path string
 		name string
 	}{
-		{filepath.Join(harnessDir, tracking.TaskListFile), tracking.TaskListFile},
-		{filepath.Join(harnessDir, tracking.AgentProgressFile), tracking.AgentProgressFile},
+		{filepath.Join(harnessDir, TaskListFile), TaskListFile},
+		{filepath.Join(harnessDir, AgentProgressFile), AgentProgressFile},
 		{filepath.Join(harnessDir, "prompts", "initialization.md"), "prompts/initialization.md"},
 		{filepath.Join(harnessDir, "prompts", "implementation.md"), "prompts/implementation.md"},
 	}
@@ -212,7 +209,7 @@ func CheckRequiredFiles(harnessDir string) CheckResult {
 
 // CheckMCPCommands verifies that all MCP server commands are available on PATH.
 // npx commands trigger a warning (auto-download) rather than a failure.
-func CheckMCPCommands(cfg *config.HarnessConfig) CheckResult {
+func CheckMCPCommands(cfg *HarnessConfig) CheckResult {
 	if len(cfg.Tools.McpServers) == 0 {
 		return CheckResult{Name: "MCP servers", Status: "PASS", Message: "None configured"}
 	}
@@ -308,7 +305,7 @@ func isDirWritable(dir string) bool {
 // RunVerify runs all verification checks and returns the results.
 // All checks run regardless of individual failures.
 func RunVerify(projectDir string) []CheckResult {
-	harnessDir := filepath.Join(projectDir, config.ConfigDirName)
+	harnessDir := filepath.Join(projectDir, ConfigDirName)
 
 	var results []CheckResult
 

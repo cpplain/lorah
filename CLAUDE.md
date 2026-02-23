@@ -10,10 +10,10 @@ Lorah is a configurable harness for long-running autonomous coding agents. It en
 
 ```bash
 # Build binary
-go build ./cmd/lorah
+go build -o ./bin/lorah .
 
 # Install globally
-go install ./cmd/lorah
+go install .
 
 # Run commands
 lorah init --project-dir ./my-project
@@ -24,7 +24,7 @@ lorah run --project-dir ./my-project
 For development without installing:
 
 ```bash
-go run ./cmd/lorah <command> --project-dir ./my-project
+go run . <command> --project-dir ./my-project
 ```
 
 For testing, this project uses the standard Go toolchain:
@@ -33,11 +33,11 @@ For testing, this project uses the standard Go toolchain:
 # Run all tests
 go test ./...
 
-# Run tests for a single package
-go test ./internal/config/
+# Run tests for the lorah package
+go test ./lorah/
 
 # Run a single test
-go test ./internal/config/ -run TestDefaultValues -v
+go test ./lorah/ -run TestDefaultValues -v
 
 # Run with race detector
 go test -race ./...
@@ -52,52 +52,57 @@ The system runs a loop that executes **phases** sequentially. Each phase invokes
 ### Package Structure
 
 ```
-cmd/lorah/    CLI entry point and subcommand wiring
-internal/
-  config/             Load and validate .lorah/config.json
-  runner/             Main agent loop: phase selection, state, error recovery
-  client/             Build and execute claude CLI subprocess
-  verify/             Pre-run setup checks
-  tracking/           Progress monitoring (JSON checklist, notes file, none)
-  messages/           Parse stream-JSON output from claude CLI
-  lock/               PID-based instance locking
-  schema/             Generate configuration JSON schema
-  presets/            Built-in preset configurations
-  info/               Templates, guides, and init scaffolding
+main.go              CLI entry point and subcommand wiring
+integration_test.go  End-to-end CLI integration tests
+lorah/               Main package - all functionality in one place
+  config.go          Load and validate .lorah/config.json
+  runner.go          Main agent loop: phase selection, state, error recovery
+  client.go          Build and execute claude CLI subprocess
+  verify.go          Pre-run setup checks
+  tracking.go        Progress monitoring (JSON checklist, notes file, none)
+  messages.go        Parse stream-JSON output from claude CLI
+  messages_types.go  Message type definitions
+  lock.go            PID-based instance locking
+  lock_unix.go       Unix-specific lock implementation
+  lock_windows.go    Windows-specific lock implementation
+  schema.go          Generate configuration JSON schema
+  presets.go         Built-in preset configurations
+  info.go            Templates, guides, and init scaffolding
+  setup-guide.md     Embedded setup documentation
+  templates/         Embedded template files
+  *_test.go          Test files alongside implementation
 ```
 
-### Package Dependency Flow
+### Main Components
 
-**cmd/lorah/main.go** orchestrates all packages:
+**main.go** — CLI entry point. Parses flags, routes to subcommands (run, verify, init, info), and calls functions in the `lorah` package.
 
-- **config** — loads and validates configuration (foundational, no internal imports)
-- **runner** — executes the agent loop (uses config, client, tracking, lock)
-- **verify** — runs setup checks (uses config)
-- **info** — scaffolding and documentation commands (uses config, schema, presets)
+**lorah package** — Single package containing all functionality, organized by file:
 
-**config** — Loads `.lorah/config.json` into Go structs. Resolves `file:prompts/foo.md` references to file contents. Validates permission modes, tracking types, phase names, and file paths.
+- **config.go** — Loads `.lorah/config.json` into Go structs. Resolves `file:prompts/foo.md` references to file contents. Validates permission modes, tracking types, phase names, and file paths.
 
-**runner** — Main agent loop. Manages phase selection, session state persistence, error tracking with exponential backoff, and auto-continue between sessions. Invokes `client.RunSession()` for each session.
+- **runner.go** — Main agent loop. Manages phase selection, session state persistence, error tracking with exponential backoff, and auto-continue between sessions. Calls `RunSession()` for each session.
 
-**client** — Builds and executes the `claude` CLI subprocess with flags for model, permission mode, tools, MCP servers, sandbox settings, and prompt. Parses stream-JSON output and returns a `SessionResult`.
+- **client.go** — Builds and executes the `claude` CLI subprocess with flags for model, permission mode, tools, MCP servers, sandbox settings, and prompt. Parses stream-JSON output and returns a `SessionResult`.
 
-**tracking** — Progress monitoring with 3 implementations: `JsonChecklistTracker` (JSON array with boolean `passes` field), `NotesFileTracker` (plain text), `NoneTracker`.
+- **tracking.go** — Progress monitoring with 3 implementations: `JsonChecklistTracker` (JSON array with boolean `passes` field), `NotesFileTracker` (plain text), `NoneTracker`.
 
-**verify** — Runs setup checks: Go version, CLI available, API connectivity, config exists, config valid, file references, MCP commands, directory permissions.
+- **verify.go** — Runs setup checks: Go version, CLI available, API connectivity, config exists, config valid, file references, MCP commands, directory permissions.
 
-**messages** — Parses newline-delimited JSON from `claude` CLI stdout into typed message structs (system, assistant, result, user).
+- **messages.go** — Parses newline-delimited JSON from `claude` CLI stdout into typed message structs (system, assistant, result, user).
 
-**lock** — PID-based lock file at `<harnessDir>/harness.lock` to prevent concurrent runs. Detects and clears stale locks from crashed processes.
+- **lock.go** — PID-based lock file at `<harnessDir>/harness.lock` to prevent concurrent runs. Detects and clears stale locks from crashed processes.
 
-**schema** — Generates documentation-oriented JSON schema for the config format. Used by `info schema`.
+- **schema.go** — Generates documentation-oriented JSON schema for the config format. Used by `info schema`.
 
-**presets** — Built-in preset network configurations (python, go, rust, web-nodejs, etc.).
+- **presets.go** — Built-in preset network configurations (python, go, rust, web-nodejs, etc.).
 
-**info** — Embeds starter templates (config.json, spec.md, initialization.md, implementation.md). Handles `init` scaffolding and `info` subcommands.
+- **info.go** — Embeds starter templates (config.json, spec.md, initialization.md, implementation.md). Handles `init` scaffolding and `info` subcommands.
 
 ## Key Patterns
 
-- **Struct-based config** — All configuration is modeled as nested Go structs with defaults applied via merge-over-defaults pattern and explicit validation functions in `config`.
+- **Flat package structure** — All code lives in a single `lorah` package (~3000 lines), organized into focused files. This follows Go idioms ("start flat") and matches similar-sized CLI tools.
+- **Struct-based config** — All configuration is modeled as nested Go structs with defaults applied via merge-over-defaults pattern and explicit validation functions.
 - **Factory functions** — `client.BuildCommand()` encapsulates all CLI flag construction; `tracking.NewTracker()` selects the right implementation.
 - **CLI-native security** — Security is enforced through `claude` CLI flags (`--permission-mode`, `--allowedTools`, `--disallowedTools`, `--settings` for sandbox), not application-layer hooks.
 - **`file:` resolution** — Prompt strings starting with `file:` are resolved relative to the `.lorah/` directory and replaced with file contents during config loading.

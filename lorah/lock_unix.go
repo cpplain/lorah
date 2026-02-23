@@ -1,6 +1,6 @@
 //go:build unix
 
-package lock
+package lorah
 
 import (
 	"errors"

@@ -1,4 +1,4 @@
-package presets
+package lorah
 
 import (
 	"testing"

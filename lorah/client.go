@@ -4,7 +4,7 @@
 // rather than using the Python claude-agent-sdk wrapper. This package
 // constructs the correct command with all necessary flags derived from
 // HarnessConfig.
-package client
+package lorah
 
 import (
 	"context"
@@ -13,9 +13,6 @@ import (
 	"io"
 	"os"
 	"os/exec"
-
-	"github.com/cpplain/lorah/internal/config"
-	"github.com/cpplain/lorah/internal/messages"
 )
 
 // BuildCommand constructs an exec.Cmd for invoking the claude CLI.
@@ -32,7 +29,7 @@ import (
 //
 // The returned Cmd does not set Stdout so that RunSession can capture it
 // via StdoutPipe.
-func BuildCommand(ctx context.Context, cfg *config.HarnessConfig, model string, prompt string) (*exec.Cmd, error) {
+func BuildCommand(ctx context.Context, cfg *HarnessConfig, model string, prompt string) (*exec.Cmd, error) {
 	args := []string{}
 
 	// Model
@@ -107,10 +104,9 @@ func BuildCommand(ctx context.Context, cfg *config.HarnessConfig, model string, 
 }
 
 // buildMCPServerArg builds the JSON string for a single MCP server config
-// passed to claude CLI via --mcp-config.
-//
+// passed to claude CLI via --mcp-//
 // The claude CLI expects a JSON object mapping server names to their configs.
-func buildMCPServerArg(name string, serverCfg config.McpServerConfig) (string, error) {
+func buildMCPServerArg(name string, serverCfg McpServerConfig) (string, error) {
 	// Define the structure for the MCP server configuration
 	type mcpServerJSON struct {
 		Command string            `json:"command"`
@@ -142,7 +138,7 @@ func buildMCPServerArg(name string, serverCfg config.McpServerConfig) (string, e
 // not through individual CLI flags. This function translates the SandboxConfig
 // into the expected JSON format documented at:
 // https://code.claude.com/docs/en/settings#sandbox-settings
-func buildSettingsJSON(cfg *config.HarnessConfig) (string, error) {
+func buildSettingsJSON(cfg *HarnessConfig) (string, error) {
 	settings := map[string]interface{}{
 		"sandbox": map[string]interface{}{
 			"enabled":                  cfg.Security.Sandbox.Enabled,
@@ -187,7 +183,7 @@ type SessionResult struct {
 // StdoutPipe, and parses messages using the messages package. Text content
 // is printed to stdout; the ResultMessage fields are captured into the
 // returned SessionResult.
-func RunSession(ctx context.Context, cfg *config.HarnessConfig, model, prompt string) (SessionResult, error) {
+func RunSession(ctx context.Context, cfg *HarnessConfig, model, prompt string) (SessionResult, error) {
 	fmt.Printf("Sending prompt to Claude...\n\n")
 
 	cmd, err := BuildCommand(ctx, cfg, model, prompt)
@@ -216,7 +212,7 @@ func RunSession(ctx context.Context, cfg *config.HarnessConfig, model, prompt st
 
 	go func() {
 		defer close(done)
-		parser := messages.NewParser(stdout)
+		parser := NewParser(stdout)
 		for {
 			// Check for context cancellation before reading next message
 			if ctx.Err() != nil {
@@ -229,19 +225,19 @@ func RunSession(ctx context.Context, cfg *config.HarnessConfig, model, prompt st
 					break
 				}
 				// *JSONDecodeError: skip for forward-compatibility
-				if _, ok := err.(*messages.JSONDecodeError); ok {
+				if _, ok := err.(*JSONDecodeError); ok {
 					continue
 				}
 				break
 			}
 			switch m := msg.(type) {
-			case *messages.AssistantMessage:
+			case *AssistantMessage:
 				for _, block := range m.Content {
-					if tb, ok := block.(*messages.TextBlock); ok {
+					if tb, ok := block.(*TextBlock); ok {
 						fmt.Print(tb.Text)
 					}
 				}
-			case *messages.ResultMessage:
+			case *ResultMessage:
 				result.SessionID = m.SessionID
 				result.NumTurns = m.NumTurns
 				result.TotalCostUSD = m.TotalCostUSD

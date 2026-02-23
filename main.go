@@ -13,10 +13,7 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/cpplain/lorah/internal/config"
-	"github.com/cpplain/lorah/internal/info"
-	"github.com/cpplain/lorah/internal/runner"
-	"github.com/cpplain/lorah/internal/verify"
+	"github.com/cpplain/lorah/lorah"
 )
 
 // Version is the current version of lorah.
@@ -117,7 +114,7 @@ func cmdRun(args []string) {
 	}
 
 	// Build CLI overrides from flags
-	overrides := &config.CLIOverrides{}
+	overrides := &lorah.CLIOverrides{}
 	if *model != "" {
 		overrides.Model = *model
 	}
@@ -125,7 +122,7 @@ func cmdRun(args []string) {
 		overrides.MaxIterations = maxIterations
 	}
 
-	cfg, err := config.LoadConfig(dir, overrides)
+	cfg, err := lorah.LoadConfig(dir, overrides)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Configuration error: %v\n", err)
 		os.Exit(1)
@@ -134,8 +131,8 @@ func cmdRun(args []string) {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	if err := runner.RunAgent(ctx, cfg); err != nil {
-		if errors.Is(err, runner.ErrInterrupted) {
+	if err := lorah.RunAgent(ctx, cfg); err != nil {
+		if errors.Is(err, lorah.ErrInterrupted) {
 			fmt.Println("\n\nInterrupted by user")
 			fmt.Println("To resume, run the same command again")
 			os.Exit(0)
@@ -167,7 +164,7 @@ func cmdVerify(args []string) {
 		os.Exit(1)
 	}
 
-	results := verify.RunVerify(dir)
+	results := lorah.RunVerify(dir)
 
 	fmt.Println("\nVerification Results:")
 	fmt.Println("--------------------------------------------------")
@@ -224,7 +221,7 @@ func cmdInit(args []string) {
 		os.Exit(1)
 	}
 
-	if err := info.InitProject(dir); err != nil {
+	if err := lorah.InitProject(dir); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
@@ -276,7 +273,7 @@ func cmdInfo(args []string) {
 // cmdInfoTemplate implements 'lorah info template'.
 func cmdInfoTemplate(args []string) {
 	fs := flag.NewFlagSet("lorah info template", flag.ExitOnError)
-	name := fs.String("name", "", "Template name (e.g. config.json)")
+	name := fs.String("name", "", "Template name (e.g. lorah.json)")
 	listFlag := fs.Bool("list", false, "List all templates")
 	allFlag := fs.Bool("all", false, "Get all templates with content")
 	jsonFlag := fs.Bool("json", false, "Output as JSON")
@@ -292,7 +289,7 @@ func cmdInfoTemplate(args []string) {
 		os.Exit(2)
 	}
 
-	if err := info.CmdInfoTemplate(*name, *listFlag, *allFlag, *jsonFlag); err != nil {
+	if err := lorah.CmdInfoTemplate(*name, *listFlag, *allFlag, *jsonFlag); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
@@ -314,7 +311,7 @@ func cmdInfoSchema(args []string) {
 		os.Exit(2)
 	}
 
-	if err := info.CmdInfoSchema(*jsonFlag); err != nil {
+	if err := lorah.CmdInfoSchema(*jsonFlag); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
@@ -338,7 +335,7 @@ func cmdInfoPreset(args []string) {
 		os.Exit(2)
 	}
 
-	if err := info.CmdInfoPreset(*name, *listFlag, *jsonFlag); err != nil {
+	if err := lorah.CmdInfoPreset(*name, *listFlag, *jsonFlag); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
@@ -360,7 +357,7 @@ func cmdInfoGuide(args []string) {
 		os.Exit(2)
 	}
 
-	if err := info.CmdInfoGuide(*jsonFlag); err != nil {
+	if err := lorah.CmdInfoGuide(*jsonFlag); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}

@@ -1,12 +1,10 @@
-package info
+package lorah
 
 import (
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/cpplain/lorah/internal/tracking"
 )
 
 func TestGetTemplate(t *testing.T) {
@@ -166,8 +164,8 @@ func TestInitProject(t *testing.T) {
 	expectedFiles := []string{
 		filepath.Join(harnessDir, "config.json"),
 		filepath.Join(harnessDir, "spec.md"),
-		filepath.Join(harnessDir, tracking.TaskListFile),
-		filepath.Join(harnessDir, tracking.AgentProgressFile),
+		filepath.Join(harnessDir, TaskListFile),
+		filepath.Join(harnessDir, AgentProgressFile),
 		filepath.Join(harnessDir, "prompts", "initialization.md"),
 		filepath.Join(harnessDir, "prompts", "implementation.md"),
 	}

@@ -1,5 +1,5 @@
 // Package lock provides a PID-based file lock to prevent concurrent harness runs.
-package lock
+package lorah
 
 import (
 	"errors"

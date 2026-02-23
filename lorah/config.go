@@ -1,7 +1,7 @@
 // Package config provides configuration loading, validation, and management
 // for the agent harness. It reads .lorah/config.json and resolves
 // file: references, environment variables, and CLI overrides.
-package config
+package lorah
 
 import (
 	"encoding/json"

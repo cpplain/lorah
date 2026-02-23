@@ -1,6 +1,6 @@
-// Package tracking provides progress tracker implementation for monitoring agent progress.
+// Package lorah provides progress tracker implementation for monitoring agent progress.
 // Tracks progress via a JSON array with a boolean "passes" field in tasks.json.
-package tracking
+package lorah
 
 import (
 	"encoding/json"

@@ -1,7 +1,7 @@
 // Package runner implements the agent loop: session state management,
 // phase selection, Claude CLI invocation, response streaming, and
 // error recovery with exponential backoff.
-package runner
+package lorah
 
 import (
 	"context"
@@ -13,11 +13,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-
-	"github.com/cpplain/lorah/internal/client"
-	"github.com/cpplain/lorah/internal/config"
-	"github.com/cpplain/lorah/internal/lock"
-	"github.com/cpplain/lorah/internal/tracking"
 )
 
 // bannerWidth is the width of printed section banners.
@@ -37,7 +32,7 @@ type SessionState struct {
 // If the file does not exist, a fresh default state is returned.
 // If the file is corrupt, a warning is printed and a fresh state is returned.
 // Completed phases that no longer exist in the config are pruned.
-func LoadSession(cfg *config.HarnessConfig) (SessionState, error) {
+func LoadSession(cfg *HarnessConfig) (SessionState, error) {
 	stateFile := filepath.Join(cfg.HarnessDir, "session.json")
 	state := SessionState{
 		SessionNumber:   0,
@@ -75,7 +70,7 @@ func LoadSession(cfg *config.HarnessConfig) (SessionState, error) {
 // It writes to a temp file in the same directory, then renames it to avoid
 // partial writes. Errors are logged as warnings rather than propagated, to
 // avoid crashing the agent loop on transient filesystem issues.
-func SaveSession(cfg *config.HarnessConfig, state SessionState) {
+func SaveSession(cfg *HarnessConfig, state SessionState) {
 	stateFile := filepath.Join(cfg.HarnessDir, "session.json")
 
 	data, err := json.MarshalIndent(state, "", "  ")
@@ -184,7 +179,7 @@ func EvaluateCondition(condition string, projectDir string) (bool, error) {
 //
 // Returns phase name and prompt file path.
 // Returns empty strings if all work is complete.
-func SelectPhase(tracker tracking.ProgressTracker, state SessionState) (string, string) {
+func SelectPhase(tracker ProgressTracker, state SessionState) (string, string) {
 	const initializationPhase = "initialization"
 	const implementationPhase = "implementation"
 
@@ -193,11 +188,11 @@ func SelectPhase(tracker tracking.ProgressTracker, state SessionState) (string, 
 
 	// If tracker is not initialized and init hasn't run, run initialization
 	if !tracker.IsInitialized() && !initCompleted {
-		return initializationPhase, config.InitializationPromptFile
+		return initializationPhase, InitializationPromptFile
 	}
 
 	// Otherwise, run implementation phase
-	return implementationPhase, config.ImplementationPromptFile
+	return implementationPhase, ImplementationPromptFile
 }
 
 // BackoffDuration calculates the exponential backoff delay for the given
@@ -208,7 +203,7 @@ func SelectPhase(tracker tracking.ProgressTracker, state SessionState) (string, 
 // Precondition: consecutiveErrors must be >= 1. The caller always increments
 // consecutiveErrors before calling this function. Panics if this precondition
 // is violated (indicates a programming error).
-func BackoffDuration(consecutiveErrors int, cfg config.ErrorRecoveryConfig) time.Duration {
+func BackoffDuration(consecutiveErrors int, cfg ErrorRecoveryConfig) time.Duration {
 	if consecutiveErrors < 1 {
 		panic(fmt.Sprintf("BackoffDuration: consecutiveErrors must be >= 1, got %d", consecutiveErrors))
 	}
@@ -229,16 +224,16 @@ func BackoffDuration(consecutiveErrors int, cfg config.ErrorRecoveryConfig) time
 //  4. Loops: selects a phase, runs a Claude session, tracks state
 //  5. Applies exponential backoff on errors
 //  6. Prints a final summary
-func RunAgent(ctx context.Context, cfg *config.HarnessConfig) error {
+func RunAgent(ctx context.Context, cfg *HarnessConfig) error {
 	// Acquire PID-based instance lock to prevent concurrent runs.
-	lockPath, err := lock.AcquireLock(cfg.HarnessDir)
+	lockPath, err := AcquireLock(cfg.HarnessDir)
 	if err != nil {
 		return fmt.Errorf("acquire lock: %w", err)
 	}
-	defer lock.ReleaseLock(lockPath)
+	defer ReleaseLock(lockPath)
 
 	// Create tracker
-	tracker := tracking.NewTracker(cfg.HarnessDir)
+	tracker := NewTracker(cfg.HarnessDir)
 
 	// Load session state
 	state, err := LoadSession(cfg)
@@ -252,7 +247,7 @@ func RunAgent(ctx context.Context, cfg *config.HarnessConfig) error {
 	}
 
 	// Create tracking and progress files if missing (safety net)
-	if err := tracking.EnsureTrackingFiles(cfg.HarnessDir); err != nil {
+	if err := EnsureTrackingFiles(cfg.HarnessDir); err != nil {
 		fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
 	}
 
@@ -327,7 +322,7 @@ func RunAgent(ctx context.Context, cfg *config.HarnessConfig) error {
 		fmt.Printf("%s\n\n", strings.Repeat("=", bannerWidth))
 
 		// Run session (use configured model for all phases)
-		result, runErr := client.RunSession(ctx, cfg, cfg.Model, prompt)
+		result, runErr := RunSession(ctx, cfg, cfg.Model, prompt)
 		if runErr != nil {
 			return fmt.Errorf("run session: %w", runErr)
 		}

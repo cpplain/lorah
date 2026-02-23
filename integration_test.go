@@ -13,11 +13,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/cpplain/lorah/internal/config"
-	"github.com/cpplain/lorah/internal/info"
-	"github.com/cpplain/lorah/internal/runner"
-	"github.com/cpplain/lorah/internal/tracking"
-	"github.com/cpplain/lorah/internal/verify"
+	"github.com/cpplain/lorah/lorah"
 )
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -31,7 +27,7 @@ func buildBinary(t *testing.T) string {
 		binPath += ".exe"
 	}
 	cmd := exec.Command("go", "build", "-o", binPath, ".")
-	cmd.Dir = filepath.Join(moduleRoot(), "cmd", "lorah")
+	cmd.Dir = moduleRoot()
 	// Pass GOCACHE so sandbox builds succeed
 	if gcache := os.Getenv("GOCACHE"); gcache != "" {
 		cmd.Env = append(os.Environ(), "GOCACHE="+gcache)
@@ -43,15 +39,14 @@ func buildBinary(t *testing.T) string {
 	return binPath
 }
 
-// moduleRoot returns the root directory of the Go module (two levels up from
-// this file: cmd/lorah/ → project root).
+// moduleRoot returns the root directory of the Go module.
 func moduleRoot() string {
 	_, filename, _, ok := runtime.Caller(0)
 	if !ok {
 		return "."
 	}
-	// filename is .../cmd/lorah/integration_test.go
-	return filepath.Join(filepath.Dir(filename), "..", "..")
+	// filename is .../integration_test.go
+	return filepath.Dir(filename)
 }
 
 // writeFakeClaude writes a shell script to tmpDir/bin/claude that acts as a
@@ -71,25 +66,25 @@ func writeFakeClaude(t *testing.T, tmpDir string) string {
 	return binDir
 }
 
-// makeInitedProject runs info.InitProject in a temp dir and returns the dir.
+// makeInitedProject runs lorah.InitProject in a temp dir and returns the dir.
 func makeInitedProject(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
-	if err := info.InitProject(dir); err != nil {
+	if err := lorah.InitProject(dir); err != nil {
 		t.Fatalf("InitProject: %v", err)
 	}
 	return dir
 }
 
 // loadSessionState reads and unmarshals .lorah/session.json.
-func loadSessionState(t *testing.T, projectDir string) runner.SessionState {
+func loadSessionState(t *testing.T, projectDir string) lorah.SessionState {
 	t.Helper()
 	path := filepath.Join(projectDir, ".lorah", "session.json")
 	data, err := os.ReadFile(path)
 	if err != nil {
 		t.Fatalf("read session.json: %v", err)
 	}
-	var state runner.SessionState
+	var state lorah.SessionState
 	if err := json.Unmarshal(data, &state); err != nil {
 		t.Fatalf("unmarshal session.json: %v", err)
 	}
@@ -101,7 +96,7 @@ func loadSessionState(t *testing.T, projectDir string) runner.SessionState {
 func TestIntegration_InitWorkflow(t *testing.T) {
 	t.Run("creates_expected_files", func(t *testing.T) {
 		dir := t.TempDir()
-		if err := info.InitProject(dir); err != nil {
+		if err := lorah.InitProject(dir); err != nil {
 			t.Fatalf("InitProject: %v", err)
 		}
 
@@ -109,8 +104,8 @@ func TestIntegration_InitWorkflow(t *testing.T) {
 		expected := []string{
 			filepath.Join(harnessDir, "config.json"),
 			filepath.Join(harnessDir, "spec.md"),
-			filepath.Join(harnessDir, tracking.TaskListFile),
-			filepath.Join(harnessDir, tracking.AgentProgressFile),
+			filepath.Join(harnessDir, lorah.TaskListFile),
+			filepath.Join(harnessDir, lorah.AgentProgressFile),
 			filepath.Join(harnessDir, "prompts", "initialization.md"),
 			filepath.Join(harnessDir, "prompts", "implementation.md"),
 		}
@@ -123,8 +118,8 @@ func TestIntegration_InitWorkflow(t *testing.T) {
 
 	t.Run("config_json_is_valid", func(t *testing.T) {
 		dir := makeInitedProject(t)
-		// config.LoadConfig should succeed on the scaffolded project
-		cfg, err := config.LoadConfig(dir, nil)
+		// lorah.LoadConfig should succeed on the scaffolded project
+		cfg, err := lorah.LoadConfig(dir, nil)
 		if err != nil {
 			t.Fatalf("LoadConfig on freshly initialized project: %v", err)
 		}
@@ -136,7 +131,7 @@ func TestIntegration_InitWorkflow(t *testing.T) {
 	t.Run("refuses_overwrite", func(t *testing.T) {
 		dir := makeInitedProject(t)
 		// Second init should fail
-		err := info.InitProject(dir)
+		err := lorah.InitProject(dir)
 		if err == nil {
 			t.Error("expected error on second InitProject call, got nil")
 		}
@@ -144,7 +139,7 @@ func TestIntegration_InitWorkflow(t *testing.T) {
 
 	t.Run("verify_passes_after_init", func(t *testing.T) {
 		dir := makeInitedProject(t)
-		results := verify.RunVerify(dir)
+		results := lorah.RunVerify(dir)
 
 		var fails int
 		for _, r := range results {
@@ -181,7 +176,7 @@ func TestIntegration_RunWorkflow(t *testing.T) {
 		}
 
 		// Create empty tasks.json
-		if err := os.WriteFile(filepath.Join(harnessDir, tracking.TaskListFile), []byte("[]"), 0o644); err != nil {
+		if err := os.WriteFile(filepath.Join(harnessDir, lorah.TaskListFile), []byte("[]"), 0o644); err != nil {
 			t.Fatal(err)
 		}
 
@@ -192,24 +187,24 @@ func TestIntegration_RunWorkflow(t *testing.T) {
 
 		// Build a minimal config with max_iterations=1 and one phase
 		maxIter := 1
-		cfg := &config.HarnessConfig{
+		cfg := &lorah.HarnessConfig{
 			Model:             "claude-test",
 			ProjectDir:        dir,
 			HarnessDir:        harnessDir,
 			MaxIterations:     &maxIter,
 			AutoContinueDelay: 0,
-			ErrorRecovery: config.ErrorRecoveryConfig{
+			ErrorRecovery: lorah.ErrorRecoveryConfig{
 				MaxConsecutiveErrors:  3,
 				InitialBackoffSeconds: 1.0,
 				MaxBackoffSeconds:     10.0,
 				BackoffMultiplier:     2.0,
 			},
-			Security: config.SecurityConfig{
+			Security: lorah.SecurityConfig{
 				PermissionMode: "default",
 			},
 		}
 
-		if err := runner.RunAgent(context.Background(), cfg); err != nil {
+		if err := lorah.RunAgent(context.Background(), cfg); err != nil {
 			t.Fatalf("RunAgent: %v", err)
 		}
 
@@ -237,7 +232,7 @@ func TestIntegration_RunWorkflow(t *testing.T) {
 		}
 
 		// Create empty tasks.json so initialization phase runs
-		if err := os.WriteFile(filepath.Join(harnessDir, tracking.TaskListFile), []byte("[]"), 0o644); err != nil {
+		if err := os.WriteFile(filepath.Join(harnessDir, lorah.TaskListFile), []byte("[]"), 0o644); err != nil {
 			t.Fatal(err)
 		}
 
@@ -246,24 +241,24 @@ func TestIntegration_RunWorkflow(t *testing.T) {
 		t.Setenv("PATH", binDir+string(os.PathListSeparator)+origPath)
 
 		maxIter := 1
-		cfg := &config.HarnessConfig{
+		cfg := &lorah.HarnessConfig{
 			Model:             "claude-test",
 			ProjectDir:        dir,
 			HarnessDir:        harnessDir,
 			MaxIterations:     &maxIter,
 			AutoContinueDelay: 0,
-			ErrorRecovery: config.ErrorRecoveryConfig{
+			ErrorRecovery: lorah.ErrorRecoveryConfig{
 				MaxConsecutiveErrors:  3,
 				InitialBackoffSeconds: 1.0,
 				MaxBackoffSeconds:     10.0,
 				BackoffMultiplier:     2.0,
 			},
-			Security: config.SecurityConfig{
+			Security: lorah.SecurityConfig{
 				PermissionMode: "default",
 			},
 		}
 
-		if err := runner.RunAgent(context.Background(), cfg); err != nil {
+		if err := lorah.RunAgent(context.Background(), cfg); err != nil {
 			t.Fatalf("RunAgent: %v", err)
 		}
 
@@ -298,7 +293,7 @@ func TestIntegration_RunWorkflow(t *testing.T) {
 		}
 
 		// Create empty tasks.json
-		if err := os.WriteFile(filepath.Join(harnessDir, tracking.TaskListFile), []byte("[]"), 0o644); err != nil {
+		if err := os.WriteFile(filepath.Join(harnessDir, lorah.TaskListFile), []byte("[]"), 0o644); err != nil {
 			t.Fatal(err)
 		}
 
@@ -307,24 +302,24 @@ func TestIntegration_RunWorkflow(t *testing.T) {
 		t.Setenv("PATH", binDir+string(os.PathListSeparator)+origPath)
 
 		maxIter := 3
-		cfg := &config.HarnessConfig{
+		cfg := &lorah.HarnessConfig{
 			Model:             "claude-test",
 			ProjectDir:        dir,
 			HarnessDir:        harnessDir,
 			MaxIterations:     &maxIter,
 			AutoContinueDelay: 0,
-			ErrorRecovery: config.ErrorRecoveryConfig{
+			ErrorRecovery: lorah.ErrorRecoveryConfig{
 				MaxConsecutiveErrors:  3,
 				InitialBackoffSeconds: 1.0,
 				MaxBackoffSeconds:     10.0,
 				BackoffMultiplier:     2.0,
 			},
-			Security: config.SecurityConfig{
+			Security: lorah.SecurityConfig{
 				PermissionMode: "default",
 			},
 		}
 
-		if err := runner.RunAgent(context.Background(), cfg); err != nil {
+		if err := lorah.RunAgent(context.Background(), cfg); err != nil {
 			t.Fatalf("RunAgent: %v", err)
 		}
 
@@ -353,7 +348,7 @@ func TestIntegration_RunWorkflow(t *testing.T) {
 
 		// Create tasks.json with all tasks passing (triggers exit)
 		taskList := `[{"name": "task1", "passes": true}, {"name": "task2", "passes": true}]`
-		if err := os.WriteFile(filepath.Join(harnessDir, tracking.TaskListFile), []byte(taskList), 0o644); err != nil {
+		if err := os.WriteFile(filepath.Join(harnessDir, lorah.TaskListFile), []byte(taskList), 0o644); err != nil {
 			t.Fatal(err)
 		}
 
@@ -361,24 +356,24 @@ func TestIntegration_RunWorkflow(t *testing.T) {
 		origPath := os.Getenv("PATH")
 		t.Setenv("PATH", binDir+string(os.PathListSeparator)+origPath)
 
-		cfg := &config.HarnessConfig{
+		cfg := &lorah.HarnessConfig{
 			Model:             "claude-test",
 			ProjectDir:        dir,
 			HarnessDir:        harnessDir,
 			AutoContinueDelay: 0,
-			ErrorRecovery: config.ErrorRecoveryConfig{
+			ErrorRecovery: lorah.ErrorRecoveryConfig{
 				MaxConsecutiveErrors:  3,
 				InitialBackoffSeconds: 1.0,
 				MaxBackoffSeconds:     10.0,
 				BackoffMultiplier:     2.0,
 			},
-			Security: config.SecurityConfig{
+			Security: lorah.SecurityConfig{
 				PermissionMode: "default",
 			},
 		}
 
 		// RunAgent should exit cleanly when tracker.IsComplete() returns true
-		if err := runner.RunAgent(context.Background(), cfg); err != nil {
+		if err := lorah.RunAgent(context.Background(), cfg); err != nil {
 			t.Fatalf("RunAgent: %v", err)
 		}
 
@@ -394,7 +389,7 @@ func TestIntegration_RunWorkflow(t *testing.T) {
 	t.Run("run_fails_gracefully_when_no_config", func(t *testing.T) {
 		dir := t.TempDir()
 		// No .lorah/config.json → LoadConfig should fail
-		_, err := config.LoadConfig(dir, nil)
+		_, err := lorah.LoadConfig(dir, nil)
 		if err == nil {
 			t.Error("expected error loading config from empty directory")
 		}
@@ -455,8 +450,8 @@ func TestIntegration_CLIParity(t *testing.T) {
 		for _, f := range []string{
 			filepath.Join(harnessDir, "config.json"),
 			filepath.Join(harnessDir, "spec.md"),
-			filepath.Join(harnessDir, tracking.TaskListFile),
-			filepath.Join(harnessDir, tracking.AgentProgressFile),
+			filepath.Join(harnessDir, lorah.TaskListFile),
+			filepath.Join(harnessDir, lorah.AgentProgressFile),
 			filepath.Join(harnessDir, "prompts", "initialization.md"),
 			filepath.Join(harnessDir, "prompts", "implementation.md"),
 		} {
@@ -695,7 +690,7 @@ func TestIntegration_RunViaBinary(t *testing.T) {
 		}
 
 		// Create tasks.json
-		if err := os.WriteFile(filepath.Join(harnessDir, tracking.TaskListFile), []byte("[]"), 0o644); err != nil {
+		if err := os.WriteFile(filepath.Join(harnessDir, lorah.TaskListFile), []byte("[]"), 0o644); err != nil {
 			t.Fatal(err)
 		}
 
@@ -746,7 +741,7 @@ func TestIntegration_RunViaBinary(t *testing.T) {
 		}
 
 		// Create tasks.json
-		if err := os.WriteFile(filepath.Join(harnessDir, tracking.TaskListFile), []byte("[]"), 0o644); err != nil {
+		if err := os.WriteFile(filepath.Join(harnessDir, lorah.TaskListFile), []byte("[]"), 0o644); err != nil {
 			t.Fatal(err)
 		}
 
@@ -766,7 +761,7 @@ func TestIntegration_RunViaBinary(t *testing.T) {
 			t.Fatal("session.json was not created")
 		}
 
-		var state runner.SessionState
+		var state lorah.SessionState
 		data, _ := os.ReadFile(sessionPath)
 		if err := json.Unmarshal(data, &state); err != nil {
 			t.Fatalf("unmarshal session.json: %v", err)

@@ -1,7 +1,7 @@
 // Package info provides template embedding, guide retrieval, and preset
 // information for the lorah tool. It handles the info subcommand
 // and the init scaffolding workflow.
-package info
+package lorah
 
 import (
 	"encoding/json"
@@ -12,11 +12,6 @@ import (
 	"strings"
 
 	_ "embed"
-
-	"github.com/cpplain/lorah/internal/config"
-	"github.com/cpplain/lorah/internal/presets"
-	"github.com/cpplain/lorah/internal/schema"
-	"github.com/cpplain/lorah/internal/tracking"
 )
 
 //go:embed setup-guide.md
@@ -167,7 +162,7 @@ func GetGuide() Guide {
 // InitProject scaffolds the .lorah/ directory in the given project dir.
 // It mirrors the Python cmd_init() behavior.
 func InitProject(projectDir string) error {
-	harnessDir := filepath.Join(projectDir, config.ConfigDirName)
+	harnessDir := filepath.Join(projectDir, ConfigDirName)
 	configFile := filepath.Join(harnessDir, "config.json")
 
 	// Check if already initialized
@@ -201,15 +196,15 @@ func InitProject(projectDir string) error {
 	}
 
 	// Create tracking files using shared logic to prevent drift
-	if err := tracking.EnsureTrackingFiles(harnessDir); err != nil {
+	if err := EnsureTrackingFiles(harnessDir); err != nil {
 		return err
 	}
 
 	fmt.Printf("Created %s/\n", harnessDir)
 	fmt.Printf("  - config.json (edit this to configure your project)\n")
 	fmt.Printf("  - spec.md (describe what you're building)\n")
-	fmt.Printf("  - %s (task tracking checklist)\n", tracking.TaskListFile)
-	fmt.Printf("  - %s (progress notes)\n", tracking.AgentProgressFile)
+	fmt.Printf("  - %s (task tracking checklist)\n", TaskListFile)
+	fmt.Printf("  - %s (progress notes)\n", AgentProgressFile)
 	fmt.Printf("  - prompts/initialization.md (setup phase prompt)\n")
 	fmt.Printf("  - prompts/implementation.md (main work phase prompt)\n")
 	fmt.Println()
@@ -239,7 +234,7 @@ func formatTemplateHuman(t Template) string {
 }
 
 // formatPresetHuman formats preset info for human reading.
-func formatPresetHuman(p presets.Preset) string {
+func formatPresetHuman(p Preset) string {
 	var sb strings.Builder
 	fmt.Fprintf(&sb, "Preset: %s\n", p.Name)
 	fmt.Fprintf(&sb, "Description: %s\n", p.Description)
@@ -273,14 +268,14 @@ func formatPresetHuman(p presets.Preset) string {
 }
 
 // formatSchemaHuman formats schema information for human reading.
-func formatSchemaHuman(s schema.Schema) string {
+func formatSchemaHuman(s Schema) string {
 	var sb strings.Builder
 	sb.WriteString("Configuration Schema\n")
 	sb.WriteString(strings.Repeat("=", 60))
 	sb.WriteString("\n\n")
 
-	var formatField func(name string, info schema.FieldInfo, indent int)
-	formatField = func(name string, info schema.FieldInfo, indent int) {
+	var formatField func(name string, info FieldInfo, indent int)
+	formatField = func(name string, info FieldInfo, indent int) {
 		prefix := strings.Repeat("  ", indent)
 		fmt.Fprintf(&sb, "%s%s:\n", prefix, name)
 
@@ -414,7 +409,7 @@ func CmdInfoTemplate(name string, listFlag bool, allFlag bool, jsonOutput bool) 
 
 // CmdInfoSchema handles `lorah info schema`.
 func CmdInfoSchema(jsonOutput bool) error {
-	s := schema.GenerateSchema()
+	s := GenerateSchema()
 
 	if jsonOutput {
 		data, err := json.MarshalIndent(s, "", "  ")
@@ -431,7 +426,7 @@ func CmdInfoSchema(jsonOutput bool) error {
 // CmdInfoPreset handles `lorah info preset`.
 func CmdInfoPreset(name string, listFlag bool, jsonOutput bool) error {
 	if listFlag {
-		summaries := presets.ListPresets()
+		summaries := ListPresets()
 		if jsonOutput {
 			data, err := json.MarshalIndent(summaries, "", "  ")
 			if err != nil {
@@ -455,11 +450,11 @@ func CmdInfoPreset(name string, listFlag bool, jsonOutput bool) error {
 		return nil
 	}
 
-	p := presets.GetPreset(name)
+	p := GetPreset(name)
 	if p == nil {
 		fmt.Printf("Error: Preset not found: %s\n", name)
 		fmt.Println("\nAvailable presets:")
-		for _, s := range presets.ListPresets() {
+		for _, s := range ListPresets() {
 			fmt.Printf("  - %s\n", s.Name)
 		}
 		return nil

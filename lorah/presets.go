@@ -1,6 +1,6 @@
 // Package presets provides embedded preset configurations for common use cases.
 // Each preset provides recommended settings for specific project types.
-package presets
+package lorah
 
 // Preset holds a named configuration preset.
 type Preset struct {

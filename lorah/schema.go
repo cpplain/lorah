@@ -1,9 +1,7 @@
 // Package schema generates documentation-oriented JSON schema from the
 // agent harness configuration structs. The schema is hand-crafted to
 // match the structure of HarnessConfig and its nested types.
-package schema
-
-import "github.com/cpplain/lorah/internal/config"
+package lorah
 
 // FieldInfo describes a single configuration field.
 type FieldInfo struct {
@@ -26,7 +24,7 @@ func GenerateSchema() Schema {
 		"model": {
 			Description: "Claude model to use for agent execution",
 			Type:        "string",
-			Default:     config.DefaultModel,
+			Default:     DefaultModel,
 			Options:     availableModels(),
 		},
 		"max_turns": {
@@ -51,7 +49,7 @@ func GenerateSchema() Schema {
 					Description: "Built-in Claude SDK tools to enable",
 					Type:        "array",
 					Default:     defaultBuiltinTools(),
-					Options:     config.DefaultBuiltinTools,
+					Options:     DefaultBuiltinTools,
 					Items:       &FieldInfo{Type: "string"},
 				},
 				"mcp_servers": {
@@ -82,12 +80,12 @@ func GenerateSchema() Schema {
 				"permission_mode": {
 					Description: "Permission mode controls how tool calls are approved",
 					Type:        "string",
-					Default:     string(config.PermissionModeAcceptEdits),
+					Default:     string(PermissionModeAcceptEdits),
 					Enum: []string{
-						string(config.PermissionModeDefault),
-						string(config.PermissionModeAcceptEdits),
-						string(config.PermissionModeBypassPermissions),
-						string(config.PermissionModePlan),
+						string(PermissionModeDefault),
+						string(PermissionModeAcceptEdits),
+						string(PermissionModeBypassPermissions),
+						string(PermissionModePlan),
 					},
 				},
 				"sandbox": {
@@ -205,8 +203,8 @@ func availableModels() []string {
 
 // defaultBuiltinTools returns the default built-in tools as an []any for JSON serialization.
 func defaultBuiltinTools() any {
-	result := make([]any, len(config.DefaultBuiltinTools))
-	for i, t := range config.DefaultBuiltinTools {
+	result := make([]any, len(DefaultBuiltinTools))
+	for i, t := range DefaultBuiltinTools {
 		result[i] = t
 	}
 	return result

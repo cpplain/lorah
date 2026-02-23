@@ -1,4 +1,4 @@
-package messages
+package lorah
 
 // MessageType identifies the kind of message emitted by the CLI.
 type MessageType string

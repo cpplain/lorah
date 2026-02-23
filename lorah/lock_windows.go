@@ -1,6 +1,6 @@
 //go:build windows
 
-package lock
+package lorah
 
 import (
 	"syscall"

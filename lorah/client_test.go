@@ -1,38 +1,36 @@
-package client
+package lorah
 
 import (
 	"context"
 	"strings"
 	"testing"
-
-	"github.com/cpplain/lorah/internal/config"
 )
 
-// minimalConfig returns a HarnessConfig with minimal required fields set.
-func minimalConfig() *config.HarnessConfig {
-	return &config.HarnessConfig{
+// minimalHarnessConfig returns a HarnessConfig with minimal required fields set.
+func minimalHarnessConfig() *HarnessConfig {
+	return &HarnessConfig{
 		Model:      "claude-sonnet-4-5",
 		MaxTurns:   10,
 		ProjectDir: "/tmp/test-project",
 		HarnessDir: "/tmp/test-project/.lorah",
-		Tools: config.ToolsConfig{
+		Tools: ToolsConfig{
 			Builtin:    []string{"Read", "Write", "Bash"},
-			McpServers: map[string]config.McpServerConfig{},
+			McpServers: map[string]McpServerConfig{},
 		},
-		Security: config.SecurityConfig{
+		Security: SecurityConfig{
 			PermissionMode: "acceptEdits",
-			Sandbox: config.SandboxConfig{
+			Sandbox: SandboxConfig{
 				Enabled:                  true,
 				AutoAllowBashIfSandboxed: true,
 				AllowUnsandboxedCommands: false,
 				ExcludedCommands:         []string{},
-				Network: config.SandboxNetworkConfig{
+				Network: SandboxNetworkConfig{
 					AllowedDomains:    []string{},
 					AllowLocalBinding: false,
 					AllowUnixSockets:  []string{},
 				},
 			},
-			Permissions: config.PermissionRulesConfig{
+			Permissions: PermissionRulesConfig{
 				Allow: []string{},
 				Deny:  []string{},
 			},
@@ -41,7 +39,7 @@ func minimalConfig() *config.HarnessConfig {
 }
 
 func TestBuildCommand_BasicFlags(t *testing.T) {
-	cfg := minimalConfig()
+	cfg := minimalHarnessConfig()
 	cmd, err := BuildCommand(context.Background(), cfg, "claude-sonnet-4-5", "Do something")
 	if err != nil {
 		t.Fatalf("BuildCommand() error = %v", err)
@@ -81,7 +79,7 @@ func TestBuildCommand_BasicFlags(t *testing.T) {
 }
 
 func TestBuildCommand_WorkingDirectory(t *testing.T) {
-	cfg := minimalConfig()
+	cfg := minimalHarnessConfig()
 	cfg.ProjectDir = "/tmp/my-project"
 
 	cmd, err := BuildCommand(context.Background(), cfg, cfg.Model, "test prompt")
@@ -95,7 +93,7 @@ func TestBuildCommand_WorkingDirectory(t *testing.T) {
 }
 
 func TestBuildCommand_AllowedTools(t *testing.T) {
-	cfg := minimalConfig()
+	cfg := minimalHarnessConfig()
 	cfg.Tools.Builtin = []string{"Read", "Write", "Bash", "Glob"}
 
 	cmd, err := BuildCommand(context.Background(), cfg, cfg.Model, "test")
@@ -114,8 +112,8 @@ func TestBuildCommand_AllowedTools(t *testing.T) {
 }
 
 func TestBuildCommand_MCPServers(t *testing.T) {
-	cfg := minimalConfig()
-	cfg.Tools.McpServers = map[string]config.McpServerConfig{
+	cfg := minimalHarnessConfig()
+	cfg.Tools.McpServers = map[string]McpServerConfig{
 		"filesystem": {
 			Command: "npx",
 			Args:    []string{"-y", "@modelcontextprotocol/server-filesystem", "/tmp"},
@@ -142,13 +140,13 @@ func TestBuildCommand_MCPServers(t *testing.T) {
 }
 
 func TestBuildCommand_SettingsFlag(t *testing.T) {
-	cfg := minimalConfig()
-	cfg.Security.Sandbox = config.SandboxConfig{
+	cfg := minimalHarnessConfig()
+	cfg.Security.Sandbox = SandboxConfig{
 		Enabled:                  true,
 		AutoAllowBashIfSandboxed: true,
 		AllowUnsandboxedCommands: false,
 		ExcludedCommands:         []string{"curl", "wget"},
-		Network: config.SandboxNetworkConfig{
+		Network: SandboxNetworkConfig{
 			AllowedDomains:    []string{"api.anthropic.com"},
 			AllowLocalBinding: true,
 			AllowUnixSockets:  []string{"/tmp/my.sock"},
@@ -192,8 +190,8 @@ func TestBuildCommand_SettingsFlag(t *testing.T) {
 }
 
 func TestBuildCommand_PermissionRules(t *testing.T) {
-	cfg := minimalConfig()
-	cfg.Security.Permissions = config.PermissionRulesConfig{
+	cfg := minimalHarnessConfig()
+	cfg.Security.Permissions = PermissionRulesConfig{
 		Allow: []string{"Bash(git:*)", "Read(/tmp/*)"},
 		Deny:  []string{"Bash(rm:*)"},
 	}
@@ -247,7 +245,7 @@ func TestBuildCommand_PermissionRules(t *testing.T) {
 }
 
 func TestBuildCommand_MaxTurns(t *testing.T) {
-	cfg := minimalConfig()
+	cfg := minimalHarnessConfig()
 	cfg.MaxTurns = 500
 
 	cmd, err := BuildCommand(context.Background(), cfg, cfg.Model, "test")
@@ -265,7 +263,7 @@ func TestBuildCommand_MaxTurns(t *testing.T) {
 }
 
 func TestBuildCommand_DifferentModel(t *testing.T) {
-	cfg := minimalConfig()
+	cfg := minimalHarnessConfig()
 	cfg.Model = "claude-sonnet-4-5"
 
 	// Pass a different model (per-phase override)
@@ -290,7 +288,7 @@ func TestBuildCommand_DifferentModel(t *testing.T) {
 }
 
 func TestBuildCommand_PromptIsLastArg(t *testing.T) {
-	cfg := minimalConfig()
+	cfg := minimalHarnessConfig()
 	prompt := "This is my test prompt"
 
 	cmd, err := BuildCommand(context.Background(), cfg, cfg.Model, prompt)
@@ -310,13 +308,13 @@ func TestBuildCommand_PromptIsLastArg(t *testing.T) {
 }
 
 func TestBuildSettingsJSON_SandboxEnabled(t *testing.T) {
-	cfg := minimalConfig()
-	cfg.Security.Sandbox = config.SandboxConfig{
+	cfg := minimalHarnessConfig()
+	cfg.Security.Sandbox = SandboxConfig{
 		Enabled:                  true,
 		AutoAllowBashIfSandboxed: false,
 		AllowUnsandboxedCommands: true,
 		ExcludedCommands:         []string{"curl"},
-		Network: config.SandboxNetworkConfig{
+		Network: SandboxNetworkConfig{
 			AllowedDomains:    []string{"example.com"},
 			AllowLocalBinding: false,
 			AllowUnixSockets:  []string{},
@@ -353,8 +351,8 @@ func TestBuildSettingsJSON_SandboxEnabled(t *testing.T) {
 }
 
 func TestBuildSettingsJSON_SandboxDisabled(t *testing.T) {
-	cfg := minimalConfig()
-	cfg.Security.Sandbox = config.SandboxConfig{
+	cfg := minimalHarnessConfig()
+	cfg.Security.Sandbox = SandboxConfig{
 		Enabled: false,
 	}
 
@@ -370,7 +368,7 @@ func TestBuildSettingsJSON_SandboxDisabled(t *testing.T) {
 
 func TestBuildMCPServerArg(t *testing.T) {
 	t.Run("simple server no env", func(t *testing.T) {
-		serverCfg := config.McpServerConfig{
+		serverCfg := McpServerConfig{
 			Command: "npx",
 			Args:    []string{"-y", "@mcp/server"},
 			Env:     map[string]string{},
@@ -400,7 +398,7 @@ func TestBuildMCPServerArg(t *testing.T) {
 	})
 
 	t.Run("server with env", func(t *testing.T) {
-		serverCfg := config.McpServerConfig{
+		serverCfg := McpServerConfig{
 			Command: "node",
 			Args:    []string{"server.js"},
 			Env:     map[string]string{"API_KEY": "secret123"},
@@ -422,7 +420,7 @@ func TestBuildMCPServerArg(t *testing.T) {
 }
 
 func TestBuildCommand_EnvSet(t *testing.T) {
-	cfg := minimalConfig()
+	cfg := minimalHarnessConfig()
 
 	cmd, err := BuildCommand(context.Background(), cfg, cfg.Model, "test")
 	if err != nil {

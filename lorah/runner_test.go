@@ -1,4 +1,4 @@
-package runner
+package lorah
 
 import (
 	"encoding/json"
@@ -6,26 +6,24 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
-
-	"github.com/cpplain/lorah/internal/config"
 )
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 // makeCfg creates a minimal HarnessConfig pointing at a temp directory.
-func makeCfg(t *testing.T) *config.HarnessConfig {
+func makeCfg(t *testing.T) *HarnessConfig {
 	t.Helper()
 	tmpDir := t.TempDir()
 	harnessDir := filepath.Join(tmpDir, ".lorah")
 	if err := os.MkdirAll(harnessDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
-	return &config.HarnessConfig{
+	return &HarnessConfig{
 		Model:             "claude-test",
 		ProjectDir:        tmpDir,
 		HarnessDir:        harnessDir,
 		AutoContinueDelay: 0,
-		ErrorRecovery: config.ErrorRecoveryConfig{
+		ErrorRecovery: ErrorRecoveryConfig{
 			MaxConsecutiveErrors:  5,
 			InitialBackoffSeconds: 5.0,
 			MaxBackoffSeconds:     120.0,
@@ -229,8 +227,8 @@ func TestSelectPhase_InitializationWhenNotInitialized(t *testing.T) {
 	if phaseName != "initialization" {
 		t.Errorf("phaseName = %q, want initialization", phaseName)
 	}
-	if promptFile != config.InitializationPromptFile {
-		t.Errorf("promptFile = %q, want %q", promptFile, config.InitializationPromptFile)
+	if promptFile != InitializationPromptFile {
+		t.Errorf("promptFile = %q, want %q", promptFile, InitializationPromptFile)
 	}
 }
 
@@ -243,8 +241,8 @@ func TestSelectPhase_ImplementationWhenInitialized(t *testing.T) {
 	if phaseName != "implementation" {
 		t.Errorf("phaseName = %q, want implementation", phaseName)
 	}
-	if promptFile != config.ImplementationPromptFile {
-		t.Errorf("promptFile = %q, want %q", promptFile, config.ImplementationPromptFile)
+	if promptFile != ImplementationPromptFile {
+		t.Errorf("promptFile = %q, want %q", promptFile, ImplementationPromptFile)
 	}
 }
 
@@ -257,15 +255,15 @@ func TestSelectPhase_ImplementationWhenInitCompleted(t *testing.T) {
 	if phaseName != "implementation" {
 		t.Errorf("phaseName = %q, want implementation", phaseName)
 	}
-	if promptFile != config.ImplementationPromptFile {
-		t.Errorf("promptFile = %q, want %q", promptFile, config.ImplementationPromptFile)
+	if promptFile != ImplementationPromptFile {
+		t.Errorf("promptFile = %q, want %q", promptFile, ImplementationPromptFile)
 	}
 }
 
 // ─── BackoffDuration ──────────────────────────────────────────────────────────
 
 func TestBackoffDuration_FirstError(t *testing.T) {
-	cfg := config.ErrorRecoveryConfig{
+	cfg := ErrorRecoveryConfig{
 		InitialBackoffSeconds: 5.0,
 		MaxBackoffSeconds:     120.0,
 		BackoffMultiplier:     2.0,
@@ -278,7 +276,7 @@ func TestBackoffDuration_FirstError(t *testing.T) {
 }
 
 func TestBackoffDuration_SecondError(t *testing.T) {
-	cfg := config.ErrorRecoveryConfig{
+	cfg := ErrorRecoveryConfig{
 		InitialBackoffSeconds: 5.0,
 		MaxBackoffSeconds:     120.0,
 		BackoffMultiplier:     2.0,
@@ -291,7 +289,7 @@ func TestBackoffDuration_SecondError(t *testing.T) {
 }
 
 func TestBackoffDuration_Capped(t *testing.T) {
-	cfg := config.ErrorRecoveryConfig{
+	cfg := ErrorRecoveryConfig{
 		InitialBackoffSeconds: 5.0,
 		MaxBackoffSeconds:     30.0,
 		BackoffMultiplier:     2.0,

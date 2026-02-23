@@ -1,6 +1,5 @@
 # Go build artifacts
-/lorah
-/lorah.exe
+bin/
 
 # Go test artifacts
 *.test

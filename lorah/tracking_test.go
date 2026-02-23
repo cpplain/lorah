@@ -1,4 +1,4 @@
-package tracking_test
+package lorah
 
 import (
 	"io"
@@ -6,8 +6,6 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
-
-	"github.com/cpplain/lorah/internal/tracking"
 )
 
 // captureOutput captures stdout during fn execution.
@@ -37,7 +35,7 @@ func writeFile(t *testing.T, dir, name, content string) string {
 
 func TestJsonChecklistTracker_GetSummary_FileNotFound(t *testing.T) {
 	dir := t.TempDir()
-	tr := tracking.NewJsonChecklistTracker(dir)
+	tr := NewJsonChecklistTracker(dir)
 	passing, total := tr.GetSummary()
 	if passing != 0 || total != 0 {
 		t.Errorf("GetSummary() = (%d, %d), want (0, 0)", passing, total)
@@ -46,8 +44,8 @@ func TestJsonChecklistTracker_GetSummary_FileNotFound(t *testing.T) {
 
 func TestJsonChecklistTracker_GetSummary_InvalidJSON(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, dir, tracking.TaskListFile, "not valid json")
-	tr := tracking.NewJsonChecklistTracker(dir)
+	writeFile(t, dir, TaskListFile, "not valid json")
+	tr := NewJsonChecklistTracker(dir)
 	passing, total := tr.GetSummary()
 	if passing != 0 || total != 0 {
 		t.Errorf("GetSummary() = (%d, %d), want (0, 0)", passing, total)
@@ -56,8 +54,8 @@ func TestJsonChecklistTracker_GetSummary_InvalidJSON(t *testing.T) {
 
 func TestJsonChecklistTracker_GetSummary_Empty(t *testing.T) {
 	dir := t.TempDir()
-	writeFile(t, dir, tracking.TaskListFile, "[]")
-	tr := tracking.NewJsonChecklistTracker(dir)
+	writeFile(t, dir, TaskListFile, "[]")
+	tr := NewJsonChecklistTracker(dir)
 	passing, total := tr.GetSummary()
 	if passing != 0 || total != 0 {
 		t.Errorf("GetSummary() = (%d, %d), want (0, 0)", passing, total)
@@ -72,8 +70,8 @@ func TestJsonChecklistTracker_GetSummary_Mixed(t *testing.T) {
 		{"name": "c", "passes": true},
 		{"name": "d"}
 	]`
-	writeFile(t, dir, tracking.TaskListFile, content)
-	tr := tracking.NewJsonChecklistTracker(dir)
+	writeFile(t, dir, TaskListFile, content)
+	tr := NewJsonChecklistTracker(dir)
 	passing, total := tr.GetSummary()
 	if passing != 2 || total != 4 {
 		t.Errorf("GetSummary() = (%d, %d), want (2, 4)", passing, total)
@@ -83,8 +81,8 @@ func TestJsonChecklistTracker_GetSummary_Mixed(t *testing.T) {
 func TestJsonChecklistTracker_GetSummary_AllPassing(t *testing.T) {
 	dir := t.TempDir()
 	content := `[{"passes": true}, {"passes": true}]`
-	writeFile(t, dir, tracking.TaskListFile, content)
-	tr := tracking.NewJsonChecklistTracker(dir)
+	writeFile(t, dir, TaskListFile, content)
+	tr := NewJsonChecklistTracker(dir)
 	passing, total := tr.GetSummary()
 	if passing != 2 || total != 2 {
 		t.Errorf("GetSummary() = (%d, %d), want (2, 2)", passing, total)
@@ -106,9 +104,9 @@ func TestJsonChecklistTracker_IsInitialized(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dir := t.TempDir()
 			if tt.content != "" {
-				writeFile(t, dir, tracking.TaskListFile, tt.content)
+				writeFile(t, dir, TaskListFile, tt.content)
 			}
-			tr := tracking.NewJsonChecklistTracker(dir)
+			tr := NewJsonChecklistTracker(dir)
 			got := tr.IsInitialized()
 			if got != tt.want {
 				t.Errorf("IsInitialized() = %v, want %v", got, tt.want)
@@ -133,9 +131,9 @@ func TestJsonChecklistTracker_IsComplete(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			dir := t.TempDir()
 			if tt.content != "" {
-				writeFile(t, dir, tracking.TaskListFile, tt.content)
+				writeFile(t, dir, TaskListFile, tt.content)
 			}
-			tr := tracking.NewJsonChecklistTracker(dir)
+			tr := NewJsonChecklistTracker(dir)
 			got := tr.IsComplete()
 			if got != tt.want {
 				t.Errorf("IsComplete() = %v, want %v", got, tt.want)
@@ -147,8 +145,8 @@ func TestJsonChecklistTracker_IsComplete(t *testing.T) {
 func TestJsonChecklistTracker_DisplaySummary_WithItems(t *testing.T) {
 	dir := t.TempDir()
 	content := `[{"passes": true}, {"passes": false}, {"passes": true}]`
-	writeFile(t, dir, tracking.TaskListFile, content)
-	tr := tracking.NewJsonChecklistTracker(dir)
+	writeFile(t, dir, TaskListFile, content)
+	tr := NewJsonChecklistTracker(dir)
 	output := captureOutput(func() { tr.DisplaySummary() })
 	if !strings.Contains(output, "2/3") {
 		t.Errorf("DisplaySummary() output %q missing '2/3'", output)
@@ -160,7 +158,7 @@ func TestJsonChecklistTracker_DisplaySummary_WithItems(t *testing.T) {
 
 func TestJsonChecklistTracker_DisplaySummary_NoFile(t *testing.T) {
 	dir := t.TempDir()
-	tr := tracking.NewJsonChecklistTracker(dir)
+	tr := NewJsonChecklistTracker(dir)
 	output := captureOutput(func() { tr.DisplaySummary() })
 	if !strings.Contains(output, "not yet created") {
 		t.Errorf("DisplaySummary() output %q missing 'not yet created'", output)

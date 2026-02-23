@@ -1,4 +1,4 @@
-package config
+package lorah
 
 import (
 	"encoding/json"
@@ -394,7 +394,7 @@ func TestValidationErrors(t *testing.T) {
 			if err == nil {
 				t.Fatalf("expected error containing %q, got nil", tt.wantErrFrag)
 			}
-			if !containsString(err.Error(), tt.wantErrFrag) {
+			if !stringContains(err.Error(), tt.wantErrFrag) {
 				t.Errorf("error = %q, want to contain %q", err.Error(), tt.wantErrFrag)
 			}
 		})
@@ -460,8 +460,8 @@ func TestBuiltinToolsOverride(t *testing.T) {
 	}
 }
 
-// containsString returns true if s contains substr.
-func containsString(s, substr string) bool {
+// stringContains returns true if s contains substr.
+func stringContains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
 		findSubstring(s, substr))
 }

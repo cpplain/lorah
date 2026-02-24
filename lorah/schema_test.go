@@ -7,143 +7,142 @@ import (
 func TestGenerateSchema(t *testing.T) {
 	s := GenerateSchema()
 
-	// Top-level fields that must be present
-	requiredTopLevel := []string{
+	// Top-level sections that must be present
+	requiredSections := []string{
+		"claude",
+		"harness",
+	}
+
+	for _, section := range requiredSections {
+		if _, ok := s[section]; !ok {
+			t.Errorf("GenerateSchema() missing top-level section %q", section)
+		}
+	}
+
+	// Fields that should NOT be present at top level
+	removedFields := []string{
 		"model",
-		"max_turns",
-		"max_iterations",
-		"auto_continue_delay",
 		"tools",
 		"security",
-		"error_recovery",
 		"post_run_instructions",
 	}
 
-	for _, field := range requiredTopLevel {
-		if _, ok := s[field]; !ok {
-			t.Errorf("GenerateSchema() missing top-level field %q", field)
+	for _, field := range removedFields {
+		if _, ok := s[field]; ok {
+			t.Errorf("GenerateSchema() should not have field %q at top level", field)
 		}
 	}
 }
 
-func TestSchemaModel(t *testing.T) {
+func TestSchemaMaxTurns(t *testing.T) {
 	s := GenerateSchema()
 
-	model, ok := s["model"]
+	claude, ok := s["claude"]
 	if !ok {
-		t.Fatal("schema missing 'model' field")
+		t.Fatal("schema missing 'claude' section")
 	}
-	if model.Type != "string" {
-		t.Errorf("model.Type = %q, want string", model.Type)
+
+	flags, ok := claude.Fields["flags"]
+	if !ok {
+		t.Fatal("claude section missing 'flags' field")
 	}
-	if model.Description == "" {
-		t.Error("model.Description is empty")
+
+	maxTurns, ok := flags.Fields["--max-turns"]
+	if !ok {
+		t.Fatal("claude.flags section missing '--max-turns' field")
 	}
-	if model.Default == nil {
-		t.Error("model.Default is nil")
+	if maxTurns.Type != "integer" {
+		t.Errorf("--max-turns.Type = %q, want integer", maxTurns.Type)
 	}
-	if len(model.Options) == 0 {
-		t.Error("model.Options is empty")
+	if maxTurns.Description == "" {
+		t.Error("--max-turns.Description is empty")
+	}
+	if maxTurns.Default == nil {
+		t.Error("--max-turns.Default is nil")
 	}
 }
 
-func TestSchemaTools(t *testing.T) {
+func TestSchemaMaxIterations(t *testing.T) {
 	s := GenerateSchema()
 
-	tools, ok := s["tools"]
+	harness, ok := s["harness"]
 	if !ok {
-		t.Fatal("schema missing 'tools' field")
-	}
-	if tools.Type != "object" {
-		t.Errorf("tools.Type = %q, want object", tools.Type)
-	}
-	if len(tools.Fields) == 0 {
-		t.Error("tools.Fields is empty")
+		t.Fatal("schema missing 'harness' section")
 	}
 
-	builtin, ok := tools.Fields["builtin"]
+	maxIter, ok := harness.Fields["max-iterations"]
 	if !ok {
-		t.Fatal("tools.Fields missing 'builtin'")
+		t.Fatal("harness section missing 'max-iterations' field")
 	}
-	if builtin.Type != "array" {
-		t.Errorf("tools.builtin.Type = %q, want array", builtin.Type)
+	if maxIter.Type != "integer" {
+		t.Errorf("max-iterations.Type = %q, want integer", maxIter.Type)
 	}
-	if len(builtin.Options) == 0 {
-		t.Error("tools.builtin.Options is empty")
-	}
-
-	mcpServers, ok := tools.Fields["mcp_servers"]
-	if !ok {
-		t.Fatal("tools.Fields missing 'mcp_servers'")
-	}
-	if mcpServers.Type != "object" {
-		t.Errorf("tools.mcp_servers.Type = %q, want object", mcpServers.Type)
+	if maxIter.Description == "" {
+		t.Error("max-iterations.Description is empty")
 	}
 }
 
-func TestSchemaSecurity(t *testing.T) {
+func TestSchemaAutoContinueDelay(t *testing.T) {
 	s := GenerateSchema()
 
-	security, ok := s["security"]
+	harness, ok := s["harness"]
 	if !ok {
-		t.Fatal("schema missing 'security' field")
+		t.Fatal("schema missing 'harness' section")
 	}
 
-	permMode, ok := security.Fields["permission_mode"]
+	delay, ok := harness.Fields["auto-continue-delay"]
 	if !ok {
-		t.Fatal("security missing 'permission_mode'")
+		t.Fatal("harness section missing 'auto-continue-delay' field")
 	}
-	if len(permMode.Enum) == 0 {
-		t.Error("permission_mode.Enum is empty")
+	if delay.Type != "integer" {
+		t.Errorf("auto-continue-delay.Type = %q, want integer", delay.Type)
 	}
-	// Verify expected values
-	expected := map[string]bool{
-		"default":           false,
-		"acceptEdits":       false,
-		"bypassPermissions": false,
-		"plan":              false,
+	if delay.Description == "" {
+		t.Error("auto-continue-delay.Description is empty")
 	}
-	for _, v := range permMode.Enum {
-		if _, ok := expected[v]; !ok {
-			t.Errorf("unexpected permission_mode enum value: %q", v)
-		}
-		expected[v] = true
-	}
-	for v, found := range expected {
-		if !found {
-			t.Errorf("permission_mode.Enum missing %q", v)
-		}
-	}
-
-	sandbox, ok := security.Fields["sandbox"]
-	if !ok {
-		t.Fatal("security missing 'sandbox'")
-	}
-	if _, ok := sandbox.Fields["enabled"]; !ok {
-		t.Error("sandbox missing 'enabled'")
-	}
-	if _, ok := sandbox.Fields["network"]; !ok {
-		t.Error("sandbox missing 'network'")
+	if delay.Default == nil {
+		t.Error("auto-continue-delay.Default is nil")
 	}
 }
 
 func TestSchemaErrorRecovery(t *testing.T) {
 	s := GenerateSchema()
 
-	er, ok := s["error_recovery"]
+	harness, ok := s["harness"]
 	if !ok {
-		t.Fatal("schema missing 'error_recovery' field")
+		t.Fatal("schema missing 'harness' section")
+	}
+
+	er, ok := harness.Fields["error-recovery"]
+	if !ok {
+		t.Fatal("harness section missing 'error-recovery' field")
+	}
+
+	if er.Type != "object" {
+		t.Errorf("error-recovery.Type = %q, want object", er.Type)
 	}
 
 	requiredFields := []string{
-		"max_consecutive_errors",
-		"initial_backoff_seconds",
-		"max_backoff_seconds",
-		"backoff_multiplier",
+		"max-consecutive-errors",
+		"initial-backoff-seconds",
+		"max-backoff-seconds",
+		"backoff-multiplier",
+		"max-error-message-length",
 	}
 	for _, f := range requiredFields {
 		if _, ok := er.Fields[f]; !ok {
-			t.Errorf("error_recovery missing field %q", f)
+			t.Errorf("error-recovery missing field %q", f)
+		}
+	}
+
+	// Check that each field has defaults set
+	for _, f := range requiredFields {
+		field := er.Fields[f]
+		if field.Default == nil {
+			t.Errorf("error-recovery.%s missing default value", f)
+		}
+		if field.Description == "" {
+			t.Errorf("error-recovery.%s missing description", f)
 		}
 	}
 }

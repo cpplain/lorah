@@ -15,16 +15,26 @@ var presets = map[string]Preset{
 		Name:        "python",
 		Description: "Python development with pip/uv and PyPI access",
 		Config: map[string]any{
-			"security.sandbox.network.allowed_domains": []string{
-				"pypi.org",
-				"files.pythonhosted.org",
-				"github.com",
-			},
-			"security.permissions.allow": []string{
-				"Bash(python *)",
-				"Bash(pip *)",
-				"Bash(uv *)",
-				"Bash(git *)",
+			"claude": map[string]any{
+				"settings": map[string]any{
+					"sandbox": map[string]any{
+						"network": map[string]any{
+							"allowedDomains": []string{
+								"pypi.org",
+								"files.pythonhosted.org",
+								"github.com",
+							},
+						},
+					},
+					"permissions": map[string]any{
+						"allow": []string{
+							"Bash(python *)",
+							"Bash(pip *)",
+							"Bash(uv *)",
+							"Bash(git *)",
+						},
+					},
+				},
 			},
 		},
 	},
@@ -32,15 +42,25 @@ var presets = map[string]Preset{
 		Name:        "go",
 		Description: "Go development with module proxy access",
 		Config: map[string]any{
-			"security.sandbox.network.allowed_domains": []string{
-				"proxy.golang.org",
-				"sum.golang.org",
-				"storage.googleapis.com",
-				"github.com",
-			},
-			"security.permissions.allow": []string{
-				"Bash(go *)",
-				"Bash(git *)",
+			"claude": map[string]any{
+				"settings": map[string]any{
+					"sandbox": map[string]any{
+						"network": map[string]any{
+							"allowedDomains": []string{
+								"proxy.golang.org",
+								"sum.golang.org",
+								"storage.googleapis.com",
+								"github.com",
+							},
+						},
+					},
+					"permissions": map[string]any{
+						"allow": []string{
+							"Bash(go *)",
+							"Bash(git *)",
+						},
+					},
+				},
 			},
 		},
 	},
@@ -48,15 +68,25 @@ var presets = map[string]Preset{
 		Name:        "rust",
 		Description: "Rust development with crates.io access",
 		Config: map[string]any{
-			"security.sandbox.network.allowed_domains": []string{
-				"crates.io",
-				"static.crates.io",
-				"github.com",
-			},
-			"security.permissions.allow": []string{
-				"Bash(cargo *)",
-				"Bash(rustc *)",
-				"Bash(git *)",
+			"claude": map[string]any{
+				"settings": map[string]any{
+					"sandbox": map[string]any{
+						"network": map[string]any{
+							"allowedDomains": []string{
+								"crates.io",
+								"static.crates.io",
+								"github.com",
+							},
+						},
+					},
+					"permissions": map[string]any{
+						"allow": []string{
+							"Bash(cargo *)",
+							"Bash(rustc *)",
+							"Bash(git *)",
+						},
+					},
+				},
 			},
 		},
 	},
@@ -64,17 +94,27 @@ var presets = map[string]Preset{
 		Name:        "web-nodejs",
 		Description: "Node.js/npm with registry access and local dev server binding",
 		Config: map[string]any{
-			"security.sandbox.network.allowed_domains": []string{
-				"registry.npmjs.org",
-				"github.com",
-				"cdn.jsdelivr.net",
-			},
-			"security.sandbox.network.allow_local_binding": true,
-			"security.permissions.allow": []string{
-				"Bash(npm *)",
-				"Bash(node *)",
-				"Bash(npx *)",
-				"Bash(git *)",
+			"claude": map[string]any{
+				"settings": map[string]any{
+					"sandbox": map[string]any{
+						"network": map[string]any{
+							"allowedDomains": []string{
+								"registry.npmjs.org",
+								"github.com",
+								"cdn.jsdelivr.net",
+							},
+							"allowLocalBinding": true,
+						},
+					},
+					"permissions": map[string]any{
+						"allow": []string{
+							"Bash(npm *)",
+							"Bash(node *)",
+							"Bash(npx *)",
+							"Bash(git *)",
+						},
+					},
+				},
 			},
 		},
 	},
@@ -82,9 +122,21 @@ var presets = map[string]Preset{
 		Name:        "read-only",
 		Description: "Code analysis only - no write tools or network access",
 		Config: map[string]any{
-			"tools.builtin":                            []string{"Read", "Glob", "Grep"},
-			"security.permission_mode":                 "bypassPermissions",
-			"security.sandbox.network.allowed_domains": []string{},
+			"claude": map[string]any{
+				"settings": map[string]any{
+					"permissions": map[string]any{
+						"defaultMode": "bypassPermissions",
+					},
+					"sandbox": map[string]any{
+						"network": map[string]any{
+							"allowedDomains": []string{},
+						},
+					},
+				},
+				"flags": map[string]any{
+					"--tools": []string{"Read", "Glob", "Grep"},
+				},
+			},
 		},
 	},
 }

@@ -19,15 +19,25 @@ func makeCfg(t *testing.T) *HarnessConfig {
 		t.Fatal(err)
 	}
 	return &HarnessConfig{
-		Model:             "claude-test",
-		ProjectDir:        tmpDir,
-		HarnessDir:        harnessDir,
-		AutoContinueDelay: 0,
-		ErrorRecovery: ErrorRecoveryConfig{
-			MaxConsecutiveErrors:  5,
-			InitialBackoffSeconds: 5.0,
-			MaxBackoffSeconds:     120.0,
-			BackoffMultiplier:     2.0,
+		ProjectDir: tmpDir,
+		HarnessDir: harnessDir,
+		Harness: HarnessSettings{
+			AutoContinueDelay: 0,
+			ErrorRecovery: ErrorRecoveryConfig{
+				MaxConsecutiveErrors:  5,
+				InitialBackoffSeconds: 5.0,
+				MaxBackoffSeconds:     120.0,
+				BackoffMultiplier:     2.0,
+				MaxErrorMessageLength: 2000,
+			},
+		},
+		Claude: ClaudeSection{
+			Flags: map[string]any{
+				"--max-turns": float64(100),
+			},
+			Settings: map[string]any{
+				"model": "claude-test",
+			},
 		},
 	}
 }

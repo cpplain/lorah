@@ -150,16 +150,17 @@ func CheckClaudeCLI() CheckResult {
 	return CheckResult{Name: "Claude CLI", Status: "PASS", Message: version}
 }
 
-// CheckConfigExists verifies that the config.json file exists in the harness directory.
+// CheckConfigExists checks whether a custom config.json file exists.
+// Config is optional, so this is informational only.
 func CheckConfigExists(harnessDir string) CheckResult {
 	configFile := filepath.Join(harnessDir, "config.json")
 	if _, err := os.Stat(configFile); err == nil {
-		return CheckResult{Name: "Config file", Status: "PASS", Message: configFile}
+		return CheckResult{Name: "Config file", Status: "INFO", Message: fmt.Sprintf("Using custom config: %s", configFile)}
 	}
 	return CheckResult{
 		Name:    "Config file",
-		Status:  "FAIL",
-		Message: fmt.Sprintf("Not found: %s", configFile),
+		Status:  "INFO",
+		Message: "Using default config (no config.json found).",
 	}
 }
 
@@ -205,56 +206,6 @@ func CheckRequiredFiles(harnessDir string) CheckResult {
 	}
 
 	return CheckResult{Name: "Required files", Status: "PASS"}
-}
-
-// CheckMCPCommands verifies that all MCP server commands are available on PATH.
-// npx commands trigger a warning (auto-download) rather than a failure.
-func CheckMCPCommands(cfg *HarnessConfig) CheckResult {
-	if len(cfg.Tools.McpServers) == 0 {
-		return CheckResult{Name: "MCP servers", Status: "PASS", Message: "None configured"}
-	}
-
-	var missing []string
-	missingNPX := false
-
-	for name, server := range cfg.Tools.McpServers {
-		if _, err := exec.LookPath(server.Command); err != nil {
-			if server.Command == "npx" {
-				missingNPX = true
-			} else {
-				missing = append(missing, fmt.Sprintf("%s (%s)", name, server.Command))
-			}
-		}
-	}
-
-	// If only npx is missing, warn with a specific message
-	if missingNPX && len(missing) == 0 {
-		return CheckResult{
-			Name:    "MCP servers",
-			Status:  "WARN",
-			Message: "npx not found on PATH (packages will auto-download on first run)",
-		}
-	}
-
-	// If other commands are missing, report them
-	if len(missing) > 0 {
-		return CheckResult{
-			Name:    "MCP servers",
-			Status:  "WARN",
-			Message: fmt.Sprintf("Commands not found: %s", strings.Join(missing, ", ")),
-		}
-	}
-
-	// All commands found — list the server names
-	names := make([]string, 0, len(cfg.Tools.McpServers))
-	for name := range cfg.Tools.McpServers {
-		names = append(names, name)
-	}
-	return CheckResult{
-		Name:    "MCP servers",
-		Status:  "PASS",
-		Message: strings.Join(names, ", "),
-	}
 }
 
 // CheckProjectDir verifies that the project directory is writable.
@@ -323,7 +274,6 @@ func RunVerify(projectDir string) []CheckResult {
 	// Config-dependent checks (only if config loaded successfully)
 	if cfg != nil {
 		results = append(results, CheckRequiredFiles(harnessDir))
-		results = append(results, CheckMCPCommands(cfg))
 		results = append(results, CheckProjectDir(projectDir))
 	}
 

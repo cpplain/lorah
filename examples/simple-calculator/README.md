@@ -50,7 +50,7 @@ Perfect for:
 See `.lorah/config.json` for:
 
 - Minimal tool set (no MCP servers)
-- No network access (sandbox with empty allowed_domains)
+- No network access (sandbox with empty allowedDomains)
 - JSON checklist tracking
 - 10-iteration limit to prevent runaway costs
 - Two-phase workflow (init + build)

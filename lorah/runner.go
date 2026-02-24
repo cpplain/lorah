@@ -257,9 +257,8 @@ func RunAgent(ctx context.Context, cfg *HarnessConfig) error {
 	fmt.Printf("%s\n", strings.Repeat("=", bannerWidth))
 	fmt.Printf("\nProject directory: %s\n", cfg.ProjectDir)
 	fmt.Printf("\nHarness directory: %s\n", cfg.HarnessDir)
-	fmt.Printf("\nModel: %s\n", cfg.Model)
-	if cfg.MaxIterations != nil {
-		fmt.Printf("\nMax iterations: %d\n", *cfg.MaxIterations)
+	if cfg.Harness.MaxIterations != nil {
+		fmt.Printf("\nMax iterations: %d\n", *cfg.Harness.MaxIterations)
 	} else {
 		fmt.Printf("\nMax iterations: Unlimited\n")
 	}
@@ -286,8 +285,8 @@ func RunAgent(ctx context.Context, cfg *HarnessConfig) error {
 		}
 
 		// Check max iterations
-		if cfg.MaxIterations != nil && iteration > *cfg.MaxIterations {
-			fmt.Printf("\nReached max iterations (%d)\n", *cfg.MaxIterations)
+		if cfg.Harness.MaxIterations != nil && iteration > *cfg.Harness.MaxIterations {
+			fmt.Printf("\nReached max iterations (%d)\n", *cfg.Harness.MaxIterations)
 			break
 		}
 
@@ -312,7 +311,7 @@ func RunAgent(ctx context.Context, cfg *HarnessConfig) error {
 		if lastErrorMessage != "" {
 			prompt = fmt.Sprintf(
 				"Note: The previous session encountered an error: %s\nPlease continue with your work.\n\n",
-				truncateString(lastErrorMessage, cfg.ErrorRecovery.MaxErrorMessageLength),
+				truncateString(lastErrorMessage, cfg.Harness.ErrorRecovery.MaxErrorMessageLength),
 			) + prompt
 		}
 
@@ -321,8 +320,8 @@ func RunAgent(ctx context.Context, cfg *HarnessConfig) error {
 		fmt.Printf("  SESSION %d: %s\n", state.SessionNumber, strings.ToUpper(phaseName))
 		fmt.Printf("%s\n\n", strings.Repeat("=", bannerWidth))
 
-		// Run session (use configured model for all phases)
-		result, runErr := RunSession(ctx, cfg, cfg.Model, prompt)
+		// Run session (model configured in settings.json)
+		result, runErr := RunSession(ctx, cfg, prompt)
 		if runErr != nil {
 			return fmt.Errorf("run session: %w", runErr)
 		}
@@ -336,7 +335,7 @@ func RunAgent(ctx context.Context, cfg *HarnessConfig) error {
 				state.CompletedPhases = append(state.CompletedPhases, phaseName)
 			}
 
-			fmt.Printf("\nAgent will auto-continue in %ds...\n", cfg.AutoContinueDelay)
+			fmt.Printf("\nAgent will auto-continue in %ds...\n", cfg.Harness.AutoContinueDelay)
 			tracker.DisplaySummary()
 
 			if tracker.IsComplete() {
@@ -347,7 +346,7 @@ func RunAgent(ctx context.Context, cfg *HarnessConfig) error {
 			}
 
 			SaveSession(cfg, state)
-			time.Sleep(time.Duration(cfg.AutoContinueDelay) * time.Second)
+			time.Sleep(time.Duration(cfg.Harness.AutoContinueDelay) * time.Second)
 
 		} else { // result.IsError == true
 			errMsg := result.ErrorMsg
@@ -357,18 +356,18 @@ func RunAgent(ctx context.Context, cfg *HarnessConfig) error {
 			consecutiveErrors++
 			lastErrorMessage = errMsg
 
-			backoff := BackoffDuration(consecutiveErrors, cfg.ErrorRecovery)
+			backoff := BackoffDuration(consecutiveErrors, cfg.Harness.ErrorRecovery)
 
 			fmt.Printf(
 				"\nSession encountered an error (attempt %d/%d)\n",
 				consecutiveErrors,
-				cfg.ErrorRecovery.MaxConsecutiveErrors,
+				cfg.Harness.ErrorRecovery.MaxConsecutiveErrors,
 			)
 
-			if consecutiveErrors >= cfg.ErrorRecovery.MaxConsecutiveErrors {
+			if consecutiveErrors >= cfg.Harness.ErrorRecovery.MaxConsecutiveErrors {
 				fmt.Printf(
 					"\nReached maximum consecutive errors (%d)\n",
-					cfg.ErrorRecovery.MaxConsecutiveErrors,
+					cfg.Harness.ErrorRecovery.MaxConsecutiveErrors,
 				)
 				exitReason = "TOO MANY ERRORS"
 				break
@@ -385,16 +384,6 @@ func RunAgent(ctx context.Context, cfg *HarnessConfig) error {
 	fmt.Printf("%s\n", strings.Repeat("=", bannerWidth))
 	fmt.Printf("\nOutput directory: %s\n", cfg.ProjectDir)
 	tracker.DisplaySummary()
-
-	if len(cfg.PostRunInstructions) > 0 {
-		fmt.Printf("\n%s\n", strings.Repeat("-", bannerWidth))
-		fmt.Printf("  NEXT STEPS:\n")
-		fmt.Printf("%s\n", strings.Repeat("-", bannerWidth))
-		for _, instruction := range cfg.PostRunInstructions {
-			fmt.Printf("  %s\n", instruction)
-		}
-		fmt.Printf("%s\n", strings.Repeat("-", bannerWidth))
-	}
 
 	fmt.Printf("\nDone!\n")
 	return nil

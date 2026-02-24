@@ -86,8 +86,8 @@ func TestTemplateContent(t *testing.T) {
 	if configTpl == nil {
 		t.Fatal("config.json template not found")
 	}
-	if !strings.Contains(configTpl.Content, "model") {
-		t.Error("config.json template should contain 'model'")
+	if !strings.Contains(configTpl.Content, "max-turns") {
+		t.Error("config.json template should contain 'max-turns'")
 	}
 
 	// spec.md should be markdown
@@ -162,7 +162,6 @@ func TestInitProject(t *testing.T) {
 	// Verify expected files were created
 	harnessDir := filepath.Join(tmpDir, ".lorah")
 	expectedFiles := []string{
-		filepath.Join(harnessDir, "config.json"),
 		filepath.Join(harnessDir, "spec.md"),
 		filepath.Join(harnessDir, TaskListFile),
 		filepath.Join(harnessDir, AgentProgressFile),
@@ -174,15 +173,6 @@ func TestInitProject(t *testing.T) {
 		if _, err := os.Stat(f); os.IsNotExist(err) {
 			t.Errorf("InitProject() did not create expected file: %s", f)
 		}
-	}
-
-	// Verify config.json has content
-	configContent, err := os.ReadFile(filepath.Join(harnessDir, "config.json"))
-	if err != nil {
-		t.Fatal("failed to read config.json:", err)
-	}
-	if len(configContent) == 0 {
-		t.Error("config.json is empty")
 	}
 }
 

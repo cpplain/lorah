@@ -84,9 +84,25 @@ func TestPresetConfigs(t *testing.T) {
 	if python == nil {
 		t.Fatal("python preset not found")
 	}
-	domains, ok := python.Config["security.sandbox.network.allowed_domains"].([]string)
+	claude, ok := python.Config["claude"].(map[string]any)
 	if !ok {
-		t.Fatal("python preset missing allowed_domains")
+		t.Fatal("python preset missing claude config")
+	}
+	settings, ok := claude["settings"].(map[string]any)
+	if !ok {
+		t.Fatal("python preset missing settings")
+	}
+	sandbox, ok := settings["sandbox"].(map[string]any)
+	if !ok {
+		t.Fatal("python preset missing sandbox")
+	}
+	network, ok := sandbox["network"].(map[string]any)
+	if !ok {
+		t.Fatal("python preset missing network")
+	}
+	domains, ok := network["allowedDomains"].([]string)
+	if !ok {
+		t.Fatal("python preset missing allowedDomains")
 	}
 	found := false
 	for _, d := range domains {
@@ -96,7 +112,7 @@ func TestPresetConfigs(t *testing.T) {
 		}
 	}
 	if !found {
-		t.Error("python preset missing pypi.org in allowed_domains")
+		t.Error("python preset missing pypi.org in allowedDomains")
 	}
 
 	// Go should have golang.org proxy
@@ -104,9 +120,25 @@ func TestPresetConfigs(t *testing.T) {
 	if goPreset == nil {
 		t.Fatal("go preset not found")
 	}
-	goDomains, ok := goPreset.Config["security.sandbox.network.allowed_domains"].([]string)
+	goClaude, ok := goPreset.Config["claude"].(map[string]any)
 	if !ok {
-		t.Fatal("go preset missing allowed_domains")
+		t.Fatal("go preset missing claude config")
+	}
+	goSettings, ok := goClaude["settings"].(map[string]any)
+	if !ok {
+		t.Fatal("go preset missing settings")
+	}
+	goSandbox, ok := goSettings["sandbox"].(map[string]any)
+	if !ok {
+		t.Fatal("go preset missing sandbox")
+	}
+	goNetwork, ok := goSandbox["network"].(map[string]any)
+	if !ok {
+		t.Fatal("go preset missing network")
+	}
+	goDomains, ok := goNetwork["allowedDomains"].([]string)
+	if !ok {
+		t.Fatal("go preset missing allowedDomains")
 	}
 	found = false
 	for _, d := range goDomains {
@@ -116,17 +148,33 @@ func TestPresetConfigs(t *testing.T) {
 		}
 	}
 	if !found {
-		t.Error("go preset missing proxy.golang.org in allowed_domains")
+		t.Error("go preset missing proxy.golang.org in allowedDomains")
 	}
 
-	// web-nodejs should have allow_local_binding = true
+	// web-nodejs should have allowLocalBinding = true
 	webNodeJS := GetPreset("web-nodejs")
 	if webNodeJS == nil {
 		t.Fatal("web-nodejs preset not found")
 	}
-	allowBinding, ok := webNodeJS.Config["security.sandbox.network.allow_local_binding"].(bool)
+	webClaude, ok := webNodeJS.Config["claude"].(map[string]any)
+	if !ok {
+		t.Fatal("web-nodejs preset missing claude config")
+	}
+	webSettings, ok := webClaude["settings"].(map[string]any)
+	if !ok {
+		t.Fatal("web-nodejs preset missing settings")
+	}
+	webSandbox, ok := webSettings["sandbox"].(map[string]any)
+	if !ok {
+		t.Fatal("web-nodejs preset missing sandbox")
+	}
+	webNetwork, ok := webSandbox["network"].(map[string]any)
+	if !ok {
+		t.Fatal("web-nodejs preset missing network")
+	}
+	allowBinding, ok := webNetwork["allowLocalBinding"].(bool)
 	if !ok || !allowBinding {
-		t.Error("web-nodejs preset should have allow_local_binding = true")
+		t.Error("web-nodejs preset should have allowLocalBinding = true")
 	}
 
 	// read-only should have bypassPermissions
@@ -134,8 +182,20 @@ func TestPresetConfigs(t *testing.T) {
 	if readOnly == nil {
 		t.Fatal("read-only preset not found")
 	}
-	permMode, ok := readOnly.Config["security.permission_mode"].(string)
+	roClaude, ok := readOnly.Config["claude"].(map[string]any)
+	if !ok {
+		t.Fatal("read-only preset missing claude config")
+	}
+	roSettings, ok := roClaude["settings"].(map[string]any)
+	if !ok {
+		t.Fatal("read-only preset missing settings")
+	}
+	roPerms, ok := roSettings["permissions"].(map[string]any)
+	if !ok {
+		t.Fatal("read-only preset missing permissions")
+	}
+	permMode, ok := roPerms["defaultMode"].(string)
 	if !ok || permMode != "bypassPermissions" {
-		t.Errorf("read-only preset permission_mode = %q, want bypassPermissions", permMode)
+		t.Errorf("read-only preset defaultMode = %q, want bypassPermissions", permMode)
 	}
 }

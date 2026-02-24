@@ -35,11 +35,11 @@ func TestCheckResultString(t *testing.T) {
 		{
 			name: "WARN with message",
 			result: CheckResult{
-				Name:    "MCP servers",
+				Name:    "Required files",
 				Status:  "WARN",
-				Message: "npx not found on PATH",
+				Message: "Some files missing",
 			},
-			contains: []string{"[WARN]", "MCP servers", "npx not found on PATH"},
+			contains: []string{"[WARN]", "Required files", "Some files missing"},
 		},
 		{
 			name: "result includes separator",
@@ -97,8 +97,9 @@ func TestCheckConfigExists(t *testing.T) {
 		}
 
 		result := CheckConfigExists(dir)
-		if result.Status != "PASS" {
-			t.Errorf("CheckConfigExists().Status = %q; want PASS", result.Status)
+		// Config file check is now informational
+		if result.Status != "INFO" {
+			t.Errorf("CheckConfigExists().Status = %q; want INFO", result.Status)
 		}
 		if !strings.Contains(result.Message, configFile) {
 			t.Errorf("CheckConfigExists().Message = %q; want to contain %q", result.Message, configFile)
@@ -109,11 +110,12 @@ func TestCheckConfigExists(t *testing.T) {
 		dir := t.TempDir()
 
 		result := CheckConfigExists(dir)
-		if result.Status != "FAIL" {
-			t.Errorf("CheckConfigExists().Status = %q; want FAIL", result.Status)
+		// Config is optional now, so status should be INFO not FAIL
+		if result.Status != "INFO" {
+			t.Errorf("CheckConfigExists().Status = %q; want INFO", result.Status)
 		}
-		if !strings.Contains(result.Message, "Not found") {
-			t.Errorf("CheckConfigExists().Message = %q; want to contain 'Not found'", result.Message)
+		if !strings.Contains(result.Message, "default config") {
+			t.Errorf("CheckConfigExists().Message = %q; want to contain 'default config'", result.Message)
 		}
 	})
 }
@@ -145,13 +147,19 @@ func TestCheckConfigValid(t *testing.T) {
 
 	t.Run("missing config dir", func(t *testing.T) {
 		dir := t.TempDir()
+		// Create harness dir so LoadConfig doesn't fail for missing dir
+		harnessDir := filepath.Join(dir, ".lorah")
+		if err := os.MkdirAll(harnessDir, 0o755); err != nil {
+			t.Fatal(err)
+		}
 
 		result, cfg := CheckConfigValid(dir)
-		if result.Status != "FAIL" {
-			t.Errorf("CheckConfigValid().Status = %q; want FAIL", result.Status)
+		// Config is optional, so this should pass with defaults
+		if result.Status != "PASS" {
+			t.Errorf("CheckConfigValid().Status = %q; want PASS (config is optional)", result.Status)
 		}
-		if cfg != nil {
-			t.Error("CheckConfigValid() should return nil config on failure")
+		if cfg == nil {
+			t.Error("CheckConfigValid() should return non-nil config with defaults")
 		}
 	})
 
@@ -259,8 +267,12 @@ func TestRunVerify(t *testing.T) {
 		}
 	})
 
-	t.Run("config-dependent checks skipped when no config", func(t *testing.T) {
+	t.Run("config-dependent checks run when no config (using defaults)", func(t *testing.T) {
 		dir := t.TempDir()
+		harnessDir := filepath.Join(dir, ".lorah")
+		if err := os.MkdirAll(harnessDir, 0o755); err != nil {
+			t.Fatal(err)
+		}
 
 		results := RunVerify(dir)
 
@@ -276,16 +288,21 @@ func TestRunVerify(t *testing.T) {
 		if configValidResult == nil {
 			t.Fatal("Expected Config validation result not found")
 		}
-		if configValidResult.Status != "FAIL" {
-			t.Errorf("Config validation should fail when no config exists, got %q", configValidResult.Status)
+		// Config should pass even without config file (defaults are used)
+		if configValidResult.Status != "PASS" {
+			t.Errorf("Config validation should pass with defaults when no config exists, got %q: %s", configValidResult.Status, configValidResult.Message)
 		}
 
-		// Required files, MCP servers, and Project directory should not appear
-		for _, r := range results {
-			switch r.Name {
-			case "Required files", "MCP servers", "Project directory":
-				t.Errorf("Config-dependent check %q should not run when config fails", r.Name)
+		// Config file check should be INFO (not FAIL)
+		var configFileResult *CheckResult
+		for i := range results {
+			if results[i].Name == "Config file" {
+				configFileResult = &results[i]
+				break
 			}
+		}
+		if configFileResult != nil && configFileResult.Status == "INFO" {
+			// Expected - config file check is now informational
 		}
 	})
 
@@ -311,37 +328,11 @@ func TestRunVerify(t *testing.T) {
 			checkNames[r.Name] = true
 		}
 
-		expectedChecks := []string{"Required files", "MCP servers", "Project directory"}
+		expectedChecks := []string{"Required files", "Project directory"}
 		for _, name := range expectedChecks {
 			if !checkNames[name] {
 				t.Errorf("Expected check %q not found in results", name)
 			}
 		}
 	})
-}
-
-// TestCheckMCPCommandsNoServers tests MCP check with no configured servers.
-func TestCheckMCPCommandsNoServers(t *testing.T) {
-	dir := t.TempDir()
-	harnessDir := filepath.Join(dir, ".lorah")
-	if err := os.MkdirAll(harnessDir, 0755); err != nil {
-		t.Fatal(err)
-	}
-
-	cfg := map[string]any{}
-	data, _ := json.Marshal(cfg)
-	os.WriteFile(filepath.Join(harnessDir, "config.json"), data, 0o644)
-
-	_, loadedCfg := CheckConfigValid(dir)
-	if loadedCfg == nil {
-		t.Fatal("config should load successfully")
-	}
-
-	result := CheckMCPCommands(loadedCfg)
-	if result.Status != "PASS" {
-		t.Errorf("CheckMCPCommands() with no servers: Status = %q; want PASS", result.Status)
-	}
-	if !strings.Contains(result.Message, "None configured") {
-		t.Errorf("CheckMCPCommands() with no servers: Message = %q; want 'None configured'", result.Message)
-	}
 }

@@ -1,43 +1,28 @@
 {
-  "_comment": "Agent Harness Configuration. All settings have sensible defaults shown below.",
-
-  "model": "claude-sonnet-4-5",
-
-  "max_turns": 1000,
-
-  "auto_continue_delay": 3,
-
-  "tools": {
-    "builtin": ["Read", "Write", "Edit", "Glob", "Grep", "Bash"]
-  },
-
-  "security": {
-    "permission_mode": "acceptEdits",
-    "sandbox": {
-      "enabled": true,
-      "auto_allow_bash_if_sandboxed": true,
-      "allow_unsandboxed_commands": false,
-      "network": {
-        "allowed_domains": ["registry.npmjs.org", "github.com"],
-        "allow_local_binding": false
-      }
-    },
-    "permissions": {
-      "allow": [
-        "Bash(npm *)",
-        "Bash(node *)",
-        "Bash(git *)",
-        "Bash(ls *)",
-        "Bash(cat *)"
-      ],
-      "deny": ["Bash(curl *)", "Bash(wget *)"]
+  "harness": {
+    "max-iterations": null,
+    "auto-continue-delay": 3,
+    "error-recovery": {
+      "max-consecutive-errors": 5,
+      "initial-backoff-seconds": 5.0,
+      "max-backoff-seconds": 120.0,
+      "backoff-multiplier": 2.0,
+      "max-error-message-length": 2000
     }
   },
-
-  "error_recovery": {
-    "max_consecutive_errors": 5,
-    "initial_backoff_seconds": 5.0,
-    "max_backoff_seconds": 120.0,
-    "backoff_multiplier": 2.0
+  "claude": {
+    "flags": {
+      "--max-turns": 1000
+    },
+    "settings": {
+      "model": "claude-sonnet-4-5",
+      "permissions": {
+        "defaultMode": "bypassPermissions"
+      },
+      "sandbox": {
+        "enabled": true,
+        "allowUnsandboxedCommands": false
+      }
+    }
   }
 }

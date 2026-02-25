@@ -72,7 +72,7 @@ Lorah executes each phase sequentially. The agent reads your spec and builds you
 
 ## Learn More
 
-- **[Setup Guide](docs/setup-guide.md)** - Detailed configuration and usage
+- **[Getting Started](docs/getting-started.md)** - Detailed configuration and usage
 - **[Examples](examples/)** - Sample projects with working configurations
   - [Simple Calculator](examples/simple-calculator/) - Basic Python CLI app
   - [Claude.ai Clone](examples/claude-ai-clone/) - Full-stack web application
@@ -81,21 +81,31 @@ Lorah executes each phase sequentially. The agent reads your spec and builds you
 
 Lorah runs a two-phase execution loop: **initialization** (runs once) and **implementation** (iterative). Each phase invokes the Claude Code CLI subprocess in an isolated session with its corresponding prompt. This design follows the patterns described in Anthropic's [Effective Harnesses for Long-Running Agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) article.
 
-Configuration is driven by `.lorah/config.json`:
+Configuration is **optional** and driven by `.lorah/config.json`. Reasonable defaults work out of the box - only configure what you need to override:
 
 ```json
 {
-  "model": "claude-sonnet-4-5",
-  "max_iterations": 10,
-  "security": {
-    "sandbox": {
-      "network": {
-        "allowed_domains": ["registry.npmjs.org"]
+  "harness": {
+    "max-iterations": 20
+  },
+  "claude": {
+    "settings": {
+      "sandbox": {
+        "network": {
+          "allowedDomains": ["registry.npmjs.org", "pypi.org"]
+        }
       }
     }
   }
 }
 ```
+
+The config has two sections:
+
+- **`harness`** - Lorah-specific settings (iterations, delays, error recovery)
+- **`claude`** - Passthrough to Claude CLI
+  - `flags` - CLI flags (e.g., `--max-turns`) - see [CLI Reference](https://code.claude.com/docs/en/cli-reference)
+  - `settings` - Settings JSON (model, permissions, sandbox) - see [Settings](https://code.claude.com/docs/en/settings)
 
 The harness uses fixed file names:
 

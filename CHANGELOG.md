@@ -22,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
-- Corrected broken relative link in setup-guide.md (../README.md → ../../README.md)
+- Corrected broken relative link in getting-started.md (../README.md → ../../README.md)
 
 ### Security
 

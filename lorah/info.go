@@ -14,8 +14,8 @@ import (
 	_ "embed"
 )
 
-//go:embed setup-guide.md
-var setupGuideContent []byte
+//go:embed getting-started.md
+var gettingStartedContent []byte
 
 // templateFS holds the embedded template files.
 // Because embed.FS is initialized at package level, we use go:embed directives.
@@ -120,7 +120,7 @@ type Section struct {
 
 // GetGuide returns the setup guide parsed into sections.
 func GetGuide() Guide {
-	content := string(setupGuideContent)
+	content := string(gettingStartedContent)
 
 	// Parse markdown sections by ## headers
 	var sections []Section
@@ -163,11 +163,11 @@ func GetGuide() Guide {
 // It mirrors the Python cmd_init() behavior.
 func InitProject(projectDir string) error {
 	harnessDir := filepath.Join(projectDir, ConfigDirName)
-	configFile := filepath.Join(harnessDir, "config.json")
+	specFile := filepath.Join(harnessDir, "spec.md")
 
 	// Check if already initialized
-	if _, err := os.Stat(configFile); err == nil {
-		return fmt.Errorf("config already exists: %s\nRemove it first if you want to reinitialize", configFile)
+	if _, err := os.Stat(specFile); err == nil {
+		return fmt.Errorf("project already exists: %s\nRemove it first if you want to reinitialize", specFile)
 	}
 
 	// Create directory structure
@@ -183,7 +183,6 @@ func InitProject(projectDir string) error {
 		content []byte
 	}
 	files := []fileTarget{
-		{"config.json", configFile, templateConfigJSON},
 		{"spec.md", filepath.Join(harnessDir, "spec.md"), templateSpecMD},
 		{"initialization.md", filepath.Join(promptsDir, "initialization.md"), templateInitializationMD},
 		{"implementation.md", filepath.Join(promptsDir, "implementation.md"), templateImplementationMD},
@@ -201,7 +200,6 @@ func InitProject(projectDir string) error {
 	}
 
 	fmt.Printf("Created %s/\n", harnessDir)
-	fmt.Printf("  - config.json (edit this to configure your project)\n")
 	fmt.Printf("  - spec.md (describe what you're building)\n")
 	fmt.Printf("  - %s (task tracking checklist)\n", TaskListFile)
 	fmt.Printf("  - %s (progress notes)\n", AgentProgressFile)

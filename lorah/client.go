@@ -8,85 +8,55 @@ package lorah
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"os"
 	"os/exec"
+	"sort"
 )
 
 // BuildCommand constructs an exec.Cmd for invoking the claude CLI.
 //
-// The command is built from the HarnessConfig and an optional phase-specific
-// model. It sets:
-//   - --model: the Claude model to use
-//   - --output-format stream-json --verbose: stream-JSON output mode
-//   - --permission-mode: how to handle tool permission prompts
-//   - --allowedTools / --disallowedTools: builtin tool allow/deny rules
+// The command is built from the HarnessConfig. It sets:
+//   - --output-format stream-json --verbose: stream-JSON output mode (required for parsing)
 //   - --add-dir: working directory for claude CLI
-//   - MCP server configuration
-//   - Sandbox flags
+//   - config flags: all flags from cfg.Claude.Flags (passthrough to CLI)
+//   - --settings: claude settings.json content
 //
 // The returned Cmd does not set Stdout so that RunSession can capture it
 // via StdoutPipe.
-func BuildCommand(ctx context.Context, cfg *HarnessConfig, model string, prompt string) (*exec.Cmd, error) {
-	args := []string{}
-
-	// Model
-	args = append(args, "--model", model)
-
-	// Stream-JSON output mode
-	args = append(args, "--output-format", "stream-json", "--verbose")
-
-	// Permission mode
-	args = append(args, "--permission-mode", cfg.Security.PermissionMode)
-
-	// Working directory for claude CLI
-	args = append(args, "--add-dir", cfg.ProjectDir)
-
-	// Allowed tools (builtin)
-	for _, tool := range cfg.Tools.Builtin {
-		args = append(args, "--allowedTools", tool)
-	}
-
-	// MCP servers: add allowed tool patterns and server configs
-	for serverName := range cfg.Tools.McpServers {
-		args = append(args, "--allowedTools", fmt.Sprintf("mcp__%s__*", serverName))
-	}
-
-	// Permission allow rules
-	for _, rule := range cfg.Security.Permissions.Allow {
-		args = append(args, "--allowedTools", rule)
-	}
-
-	// Permission deny rules
-	for _, rule := range cfg.Security.Permissions.Deny {
-		args = append(args, "--disallowedTools", rule)
-	}
-
-	// MCP server configuration
-	for serverName, serverCfg := range cfg.Tools.McpServers {
-		mcpArg, err := buildMCPServerArg(serverName, serverCfg)
-		if err != nil {
-			return nil, fmt.Errorf("failed to build MCP server arg for %q: %w", serverName, err)
-		}
-		args = append(args, "--mcp-config", mcpArg)
-	}
-
-	// Settings JSON (includes sandbox configuration)
-	settingsJSON, err := buildSettingsJSON(cfg)
+func BuildCommand(ctx context.Context, cfg *HarnessConfig, prompt string) (*exec.Cmd, error) {
+	settingsJSON, err := cfg.SettingsJSON()
 	if err != nil {
-		return nil, fmt.Errorf("failed to build settings JSON: %w", err)
-	}
-	args = append(args, "--settings", settingsJSON)
-
-	// Max turns
-	if cfg.MaxTurns > 0 {
-		args = append(args, "--max-turns", fmt.Sprintf("%d", cfg.MaxTurns))
+		return nil, fmt.Errorf("failed to serialize settings: %w", err)
 	}
 
-	// The prompt is the final positional argument
-	args = append(args, prompt)
+	args := []string{
+		"--output-format", "stream-json",
+		"--verbose",
+		"--add-dir", cfg.ProjectDir,
+	}
+
+	// Add flags from config (passthrough to Claude CLI)
+	// Keys are explicit flag names (e.g., "--max-turns"), values are serialized.
+	// null values mean include the flag without a value (boolean flags).
+	// Sort keys for deterministic ordering.
+	keys := make([]string, 0, len(cfg.Claude.Flags))
+	for key := range cfg.Claude.Flags {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+	for _, key := range keys {
+		value := cfg.Claude.Flags[key]
+		if value == nil {
+			args = append(args, key)
+		} else {
+			args = append(args, key, fmt.Sprintf("%v", value))
+		}
+	}
+
+	// Add settings and prompt
+	args = append(args, "--settings", settingsJSON, prompt)
 
 	cmd := exec.CommandContext(ctx, "claude", args...)
 
@@ -101,63 +71,6 @@ func BuildCommand(ctx context.Context, cfg *HarnessConfig, model string, prompt 
 	cmd.Env = buildEnv()
 
 	return cmd, nil
-}
-
-// buildMCPServerArg builds the JSON string for a single MCP server config
-// passed to claude CLI via --mcp-//
-// The claude CLI expects a JSON object mapping server names to their configs.
-func buildMCPServerArg(name string, serverCfg McpServerConfig) (string, error) {
-	// Define the structure for the MCP server configuration
-	type mcpServerJSON struct {
-		Command string            `json:"command"`
-		Args    []string          `json:"args"`
-		Env     map[string]string `json:"env,omitempty"`
-	}
-
-	// Build the full structure: {"<name>": {...}}
-	// Note: json.Marshal sorts map keys lexicographically, providing deterministic output.
-	fullConfig := map[string]mcpServerJSON{
-		name: {
-			Command: serverCfg.Command,
-			Args:    serverCfg.Args,
-			Env:     serverCfg.Env,
-		},
-	}
-
-	result, err := json.Marshal(fullConfig)
-	if err != nil {
-		return "", fmt.Errorf("failed to marshal MCP server config: %w", err)
-	}
-
-	return string(result), nil
-}
-
-// buildSettingsJSON creates the JSON string for the --settings flag.
-//
-// The Claude CLI accepts sandbox configuration through a settings JSON object,
-// not through individual CLI flags. This function translates the SandboxConfig
-// into the expected JSON format documented at:
-// https://code.claude.com/docs/en/settings#sandbox-settings
-func buildSettingsJSON(cfg *HarnessConfig) (string, error) {
-	settings := map[string]interface{}{
-		"sandbox": map[string]interface{}{
-			"enabled":                  cfg.Security.Sandbox.Enabled,
-			"autoAllowBashIfSandboxed": cfg.Security.Sandbox.AutoAllowBashIfSandboxed,
-			"allowUnsandboxedCommands": cfg.Security.Sandbox.AllowUnsandboxedCommands,
-			"excludedCommands":         cfg.Security.Sandbox.ExcludedCommands,
-			"network": map[string]interface{}{
-				"allowedDomains":    cfg.Security.Sandbox.Network.AllowedDomains,
-				"allowLocalBinding": cfg.Security.Sandbox.Network.AllowLocalBinding,
-				"allowUnixSockets":  cfg.Security.Sandbox.Network.AllowUnixSockets,
-			},
-		},
-	}
-
-	jsonBytes, err := json.Marshal(settings)
-	if err != nil {
-		return "", err
-	}
-	return string(jsonBytes), nil
 }
 
 // buildEnv returns the environment variables to pass to the claude subprocess.
@@ -183,10 +96,10 @@ type SessionResult struct {
 // StdoutPipe, and parses messages using the messages package. Text content
 // is printed to stdout; the ResultMessage fields are captured into the
 // returned SessionResult.
-func RunSession(ctx context.Context, cfg *HarnessConfig, model, prompt string) (SessionResult, error) {
+func RunSession(ctx context.Context, cfg *HarnessConfig, prompt string) (SessionResult, error) {
 	fmt.Printf("Sending prompt to Claude...\n\n")
 
-	cmd, err := BuildCommand(ctx, cfg, model, prompt)
+	cmd, err := BuildCommand(ctx, cfg, prompt)
 	if err != nil {
 		return SessionResult{}, fmt.Errorf("failed to build command: %w", err)
 	}
@@ -200,15 +113,20 @@ func RunSession(ctx context.Context, cfg *HarnessConfig, model, prompt string) (
 		return SessionResult{}, fmt.Errorf("failed to start claude CLI: %w", err)
 	}
 
-	// Watch for context cancellation and close stdout to immediately unblock parser.
-	// Without this, parser.Next() can remain blocked on I/O even after ctx is cancelled.
-	go func() {
-		<-ctx.Done()
-		stdout.Close()
-	}()
-
 	var result SessionResult
 	done := make(chan struct{})
+
+	// Watch for context cancellation and close stdout to immediately unblock parser.
+	// Without this, parser.Next() can remain blocked on I/O even after ctx is cancelled.
+	// Also exit when work completes to avoid goroutine leak when using context.Background().
+	go func() {
+		select {
+		case <-ctx.Done():
+			stdout.Close()
+		case <-done:
+			// Work complete, subprocess has exited
+		}
+	}()
 
 	go func() {
 		defer close(done)

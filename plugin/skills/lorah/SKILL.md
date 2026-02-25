@@ -86,9 +86,6 @@ Ask conversationally (one at a time):
    - **default**: Prompt for file edits
    - **acceptEdits**: Auto-accept file edits, prompt for bash
    - **bypassPermissions**: No prompts (use with sandbox)
-6. **Tracking type?**
-   - **json_checklist**: JSON array with `passes` field (recommended)
-   - **notes_file**: Plain text progress notes
 
 #### 4. Fetch Selected Preset
 
@@ -102,7 +99,7 @@ lorah info preset --name <preset-name> --json
 
 Use Edit tool to update scaffolded files based on responses and preset:
 
-- Edit `.lorah/config.json` - Apply preset settings, set permission_mode and tracking.type
+- Edit `.lorah/config.json` - Apply preset settings, set claude.settings.permissions.defaultMode
 - Edit `.lorah/spec.md` - Add project description
 - Edit `.lorah/prompts/initialization.md` and `implementation.md` - Tailor to project (init prompt should create tracking file)
 
@@ -152,8 +149,7 @@ lorah info guide --json
 Ask user about gaps:
 
 - Network domains? (use preset defaults or add specific)
-- Permission mode? (default/acceptEdits/bypassPermissions)
-- Tracking type? (json_checklist/notes_file)
+- Permission mode? (default/acceptEdits/bypassPermissions) - set in claude.settings.permissions.defaultMode
 
 #### 4. Fetch Selected Preset
 
@@ -166,7 +162,7 @@ lorah info preset --name <preset-name> --json
 Map existing content to harness structure using Edit tool:
 
 - Edit `.lorah/spec.md` - Migrate project description
-- Edit `.lorah/config.json` - Apply preset, set permission_mode and tracking.type
+- Edit `.lorah/config.json` - Apply preset, set claude.settings.permissions.defaultMode
 - Edit phase prompts - Tailor to detected needs (init prompt should create tracking file)
 
 #### 6. Verify
@@ -197,9 +193,9 @@ lorah info guide --json
 
 Compare against schema and presets:
 
-- Security (sandbox, permission_mode, network restrictions, allow/deny)
+- Security (sandbox, defaultMode, network restrictions, allow/deny)
 - Completeness (phases, tracking, error recovery)
-- Performance (max_turns, model choice)
+- Performance (--max-turns flag, model choice)
 
 #### 3. Present Recommendations
 
@@ -259,6 +255,6 @@ lorah verify --project-dir .
 
 - Be conversational and explain configuration choices
 - After successful setup, mention: `lorah run --project-dir .`
-  - Optional: `--max-iterations N`, `--model MODEL`
+  - Optional: `--max-iterations N`
 
 ---

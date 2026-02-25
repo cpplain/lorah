@@ -93,7 +93,6 @@ func addProjectDirFlag(fs *flag.FlagSet) *string {
 func cmdRun(args []string) {
 	fs := flag.NewFlagSet("lorah run", flag.ExitOnError)
 	projectDir := addProjectDirFlag(fs)
-	model := fs.String("model", "", "Override model from config")
 	maxIterations := fs.Int("max-iterations", 0, "Override max iterations from config")
 
 	fs.Usage = func() {
@@ -115,9 +114,6 @@ func cmdRun(args []string) {
 
 	// Build CLI overrides from flags
 	overrides := &lorah.CLIOverrides{}
-	if *model != "" {
-		overrides.Model = *model
-	}
 	if *maxIterations != 0 {
 		overrides.MaxIterations = maxIterations
 	}
@@ -146,6 +142,7 @@ func cmdRun(args []string) {
 func cmdVerify(args []string) {
 	fs := flag.NewFlagSet("lorah verify", flag.ExitOnError)
 	projectDir := addProjectDirFlag(fs)
+	configFlag := fs.Bool("config", false, "Show resolved configuration (skip verification)")
 
 	fs.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: lorah verify [options]\n\n")
@@ -162,6 +159,17 @@ func cmdVerify(args []string) {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error resolving project directory: %v\n", err)
 		os.Exit(1)
+	}
+
+	// If --config flag is set, show config and exit
+	if *configFlag {
+		cfg, err := lorah.LoadConfig(dir, nil)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Configuration error: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Print(lorah.FormatConfig(cfg))
+		return
 	}
 
 	results := lorah.RunVerify(dir)

@@ -76,6 +76,8 @@ cd /path/to/your/project
 lorah run
 ```
 
+Note: This workflow does not include `config.json` — lorah uses reasonable defaults.
+
 ## Output
 
 After a successful run, the project directory will contain:

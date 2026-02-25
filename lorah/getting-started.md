@@ -1,4 +1,4 @@
-# Harness Setup Guide
+# Getting Started with Lorah
 
 A step-by-step guide for setting up a project to use with Lorah.
 
@@ -17,11 +17,12 @@ This creates:
 ```
 my-project/
   .lorah/
-    config.json       # Harness configuration
-    spec.md           # Your project specification
+    spec.md               # Your project specification
+    tasks.json            # Task tracking checklist
+    progress.md           # Progress notes
     prompts/
-      initialization.md         # One-time setup prompt
-      implementation.md        # Iterative build prompt
+      initialization.md   # One-time setup prompt
+      implementation.md   # Iterative build prompt
 ```
 
 ### Step 2: Write Your Project Specification
@@ -61,15 +62,26 @@ A React dashboard that displays real-time metrics.
 - **List your tech stack** - The agent needs to know which tools/frameworks to use
 - **Define "done"** - Clear success criteria prevent premature completion claims
 
-### Step 3: Configure the Harness
+### Step 3: Configure the Harness (Optional)
 
-Edit `.lorah/config.json`:
+Configuration is **optional**. Reasonable defaults work out of the box — only configure what you need to override.
+
+The config has two sections:
+
+- **`harness`** — Lorah-specific settings (iterations, delays, error recovery)
+- **`claude`** — Passthrough to Claude CLI
+  - `flags` — CLI flags (e.g., `--max-turns`) — see [CLI Reference](https://code.claude.com/docs/en/cli-reference)
+  - `settings` — Settings JSON (model, permissions, sandbox) — see [Settings](https://code.claude.com/docs/en/settings)
+
+Create `.lorah/config.json`:
 
 **For simple projects** (like the calculator example):
 
 ```json
 {
-  "max_iterations": 10
+  "harness": {
+    "max-iterations": 10
+  }
 }
 ```
 
@@ -77,15 +89,17 @@ Edit `.lorah/config.json`:
 
 ```json
 {
-  "security": {
-    "sandbox": {
-      "network": {
-        "allowed_domains": ["registry.npmjs.org", "github.com"],
-        "allow_local_binding": true
+  "claude": {
+    "settings": {
+      "sandbox": {
+        "network": {
+          "allowedDomains": ["registry.npmjs.org", "github.com"],
+          "allowLocalBinding": true
+        }
+      },
+      "permissions": {
+        "allow": ["Bash(npm *)"]
       }
-    },
-    "permissions": {
-      "allow": ["Bash(npm *)"]
     }
   }
 }
@@ -95,11 +109,13 @@ Edit `.lorah/config.json`:
 
 ```json
 {
-  "tools": {
-    "mcp_servers": {
-      "puppeteer": {
-        "command": "npx",
-        "args": ["puppeteer-mcp-server"]
+  "claude": {
+    "settings": {
+      "mcpServers": {
+        "puppeteer": {
+          "command": "npx",
+          "args": ["puppeteer-mcp-server"]
+        }
       }
     }
   }
@@ -308,34 +324,38 @@ The agent will:
 1. Run init phase (once, skipped if tasks.json exists)
 2. Run build phase repeatedly
 3. Auto-continue between sessions (3 second delay)
-4. Stop when all features pass (or hit max_iterations)
+4. Stop when all features pass (or hit max-iterations)
 
 ---
 
 ## Quick Reference
 
-| File                        | Purpose                                      |
-| --------------------------- | -------------------------------------------- |
-| `config.json`               | Harness settings (model, security, tracking) |
-| `spec.md`                   | What you're building (read by agent)         |
-| `prompts/initialization.md` | One-time setup instructions                  |
-| `prompts/implementation.md` | Iterative build instructions                 |
-| `tasks.json`                | Progress tracking (created by init phase)    |
-| `.lorah/progress.md`        | Session handoff notes (created by agent)     |
+| File                        | Purpose                                    |
+| --------------------------- | ------------------------------------------ |
+| `config.json`               | Harness and Claude CLI settings (optional) |
+| `spec.md`                   | What you're building (read by agent)       |
+| `prompts/initialization.md` | One-time setup instructions                |
+| `prompts/implementation.md` | Iterative build instructions               |
+| `tasks.json`                | Progress tracking (created by init phase)  |
+| `.lorah/progress.md`        | Session handoff notes (created by agent)   |
 
 ---
 
 ## Common Configurations
 
+For all available flags and settings, see [Claude Code settings](https://code.claude.com/docs/en/settings).
+
 ### Read-only analysis (no edits)
 
 ```json
 {
-  "tools": {
-    "builtin": ["Read", "Glob", "Grep"]
-  },
-  "security": {
-    "permission_mode": "bypassPermissions"
+  "claude": {
+    "settings": {
+      "permissions": {
+        "defaultMode": "bypassPermissions",
+        "deny": ["Edit", "Write", "Bash", "NotebookEdit"]
+      }
+    }
   }
 }
 ```
@@ -344,11 +364,15 @@ The agent will:
 
 ```json
 {
-  "security": {
-    "permission_mode": "acceptEdits",
-    "sandbox": {
-      "enabled": true,
-      "auto_allow_bash_if_sandboxed": true
+  "claude": {
+    "settings": {
+      "permissions": {
+        "defaultMode": "acceptEdits"
+      },
+      "sandbox": {
+        "enabled": true,
+        "autoAllowBashIfSandboxed": true
+      }
     }
   }
 }
@@ -358,20 +382,22 @@ The agent will:
 
 ```json
 {
-  "security": {
-    "sandbox": {
-      "network": {
-        "allowed_domains": [
-          "registry.npmjs.org",
-          "github.com",
-          "cdn.jsdelivr.net"
-        ],
-        "allow_local_binding": true
+  "claude": {
+    "settings": {
+      "sandbox": {
+        "network": {
+          "allowedDomains": [
+            "registry.npmjs.org",
+            "github.com",
+            "cdn.jsdelivr.net"
+          ],
+          "allowLocalBinding": true
+        }
+      },
+      "permissions": {
+        "allow": ["Bash(npm *)", "Bash(node *)", "Bash(npx *)", "Bash(git *)"],
+        "deny": ["Bash(curl *)", "Bash(wget *)"]
       }
-    },
-    "permissions": {
-      "allow": ["Bash(npm *)", "Bash(node *)", "Bash(npx *)", "Bash(git *)"],
-      "deny": ["Bash(curl *)", "Bash(wget *)"]
     }
   }
 }
@@ -381,14 +407,16 @@ The agent will:
 
 ```json
 {
-  "security": {
-    "sandbox": {
-      "network": {
-        "allowed_domains": ["pypi.org", "files.pythonhosted.org", "github.com"]
+  "claude": {
+    "settings": {
+      "sandbox": {
+        "network": {
+          "allowedDomains": ["pypi.org", "files.pythonhosted.org", "github.com"]
+        }
+      },
+      "permissions": {
+        "allow": ["Bash(python *)", "Bash(pip *)", "Bash(uv *)", "Bash(git *)"]
       }
-    },
-    "permissions": {
-      "allow": ["Bash(python *)", "Bash(pip *)", "Bash(uv *)", "Bash(git *)"]
     }
   }
 }
@@ -399,8 +427,8 @@ The agent will:
 ## Troubleshooting
 
 **Agent can't install packages**
-→ Add the package registry domain to `allowed_domains`
-→ Add the package manager command to `allow` list
+→ Add the package registry domain to `claude.settings.sandbox.network.allowedDomains`
+→ Add the package manager command to `claude.settings.permissions.allow` list
 
 **Agent keeps working on the same feature**
 → Check if tests are actually passing
@@ -412,7 +440,7 @@ The agent will:
 
 **Session errors / circuit breaker triggered**
 → Run `lorah verify` to check configuration
-→ Check error_recovery settings in config.json
+→ Check `harness.error-recovery` settings in config.json
 
 **Agent goes off-track**
 → Make spec.md more specific
@@ -440,8 +468,8 @@ This harness follows Anthropic's guidance from "Effective Harnesses for Long-Run
 
 Once you're comfortable with the basic setup, explore:
 
-- **[Configuration Reference](../internal/info/templates/config.json)** - All available options with detailed comments
+- **[Configuration Reference](../lorah/templates/config.json)** - All available options with detailed comments
 - **[Examples](../examples/)** - Real-world project setups
   - [Simple Calculator](../examples/simple-calculator/) - Python, completes in ~5 minutes
   - [Claude.ai Clone](../examples/claude-ai-clone/) - Next.js with MCP browser automation
-- **[Main README](../../README.md)** - Technical details on how the harness works
+- **[Main README](../README.md)** - Technical details on how the harness works

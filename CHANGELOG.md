@@ -7,24 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-02-24
+
 ### Added
+
+- Configuration is now optional with sensible defaults — only configure what you need to change
 
 ### Changed
 
-- Updated README.md to document two-phase execution model with fixed file names
+- **BREAKING**: Configuration format changed to a split structure with `harness` (lorah settings) and `claude` (passthrough to Claude CLI) sections. Existing configs require migration—run `lorah info template` to see the new format.
+- Updated documentation to document two-phase execution model with fixed file names (initialization and implementation phases)
+- Renamed `docs/setup-guide.md` to `docs/getting-started.md`
 - Renamed review workflow prompts from `inventory.md`/`fix.md` to `initialization.md`/`implementation.md`
-- Updated review workflow README to use initialization/implementation terminology
-- Removed deprecated config options from review workflow example (`system_prompt`, `tracking`, `phases`)
-
-### Deprecated
-
-### Removed
+- Migrated examples to new config format; review workflow now uses defaults
 
 ### Fixed
 
-- Corrected broken relative link in getting-started.md (../README.md → ../../README.md)
-
-### Security
+- Fixed broken link in getting started guide
 
 ## [0.1.0] - 2026-02-20
 
@@ -50,5 +49,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configuration JSON schema accessible via `lorah info schema`
 - Single self-contained binary with no external runtime dependencies
 
-[unreleased]: https://github.com/cpplain/lorah/compare/v0.1.0...HEAD
+[unreleased]: https://github.com/cpplain/lorah/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/cpplain/lorah/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/cpplain/lorah/releases/tag/v0.1.0

@@ -53,8 +53,8 @@ type ProgressTracker interface {
 	// IsComplete returns true when all items are passing and there is at least one item.
 	IsComplete() bool
 
-	// DisplaySummary prints a progress summary to stdout.
-	DisplaySummary()
+	// Summary returns a progress summary string.
+	Summary() string
 }
 
 // JsonChecklistTracker tracks progress via a JSON array with a boolean passing field.
@@ -140,7 +140,7 @@ func (t *JsonChecklistTracker) GetSummary() (int, int) {
 		return 0, 0
 	}
 
-	var items []map[string]interface{}
+	var items []map[string]any
 	if err := json.Unmarshal(data, &items); err != nil {
 		t.cachedPassing = 0
 		t.cachedTotal = 0
@@ -179,13 +179,12 @@ func (t *JsonChecklistTracker) IsComplete() bool {
 	return passing == total && total > 0
 }
 
-// DisplaySummary prints a progress summary to stdout.
-func (t *JsonChecklistTracker) DisplaySummary() {
+// Summary returns a progress summary string.
+func (t *JsonChecklistTracker) Summary() string {
 	passing, total := t.GetSummary()
 	if total > 0 {
 		percentage := float64(passing) / float64(total) * 100
-		fmt.Printf("\nProgress: %d/%d tests passing (%.1f%%)\n", passing, total, percentage)
-	} else {
-		fmt.Printf("\nProgress: %s not yet created\n", filepath.Base(t.filePath))
+		return fmt.Sprintf("Progress: %d/%d tests passing (%.1f%%)", passing, total, percentage)
 	}
+	return fmt.Sprintf("Progress: %s not yet created", filepath.Base(t.filePath))
 }

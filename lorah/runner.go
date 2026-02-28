@@ -1,4 +1,6 @@
-// Package runner implements the agent loop: session state management,
+// Package lorah provides the harness for long-running autonomous coding agents.
+//
+// This file (runner.go) implements the agent loop: session state management,
 // phase selection, Claude CLI invocation, response streaming, and
 // error recovery with exponential backoff.
 package lorah
@@ -11,12 +13,10 @@ import (
 	"math"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 )
-
-// bannerWidth is the width of printed section banners.
-const bannerWidth = 70
 
 // ErrInterrupted is returned by RunAgent when the context is cancelled by user interrupt (SIGINT/SIGTERM).
 var ErrInterrupted = errors.New("interrupted")
@@ -184,7 +184,7 @@ func SelectPhase(tracker ProgressTracker, state SessionState) (string, string) {
 	const implementationPhase = "implementation"
 
 	// Check if initialization phase has been completed
-	initCompleted := containsString(state.CompletedPhases, initializationPhase)
+	initCompleted := slices.Contains(state.CompletedPhases, initializationPhase)
 
 	// If tracker is not initialized and init hasn't run, run initialization
 	if !tracker.IsInitialized() && !initCompleted {
@@ -225,12 +225,20 @@ func BackoffDuration(consecutiveErrors int, cfg ErrorRecoveryConfig) time.Durati
 //  5. Applies exponential backoff on errors
 //  6. Prints a final summary
 func RunAgent(ctx context.Context, cfg *HarnessConfig) error {
+	// Ensure cursor is visible on exit (in case spinner was interrupted)
+	if isTerminal(os.Stdout) {
+		defer fmt.Print("\033[?25h")
+	}
+
 	// Acquire PID-based instance lock to prevent concurrent runs.
 	lockPath, err := AcquireLock(cfg.HarnessDir)
 	if err != nil {
 		return fmt.Errorf("acquire lock: %w", err)
 	}
 	defer ReleaseLock(lockPath)
+
+	// Create output manager
+	om := &outputManager{writer: os.Stdout}
 
 	// Create tracker
 	tracker := NewTracker(cfg.HarnessDir)
@@ -251,22 +259,11 @@ func RunAgent(ctx context.Context, cfg *HarnessConfig) error {
 		fmt.Fprintf(os.Stderr, "Warning: %v\n", err)
 	}
 
-	// Print startup banner
-	fmt.Printf("\n%s\n", strings.Repeat("=", bannerWidth))
-	fmt.Printf("  LORAH\n")
-	fmt.Printf("%s\n", strings.Repeat("=", bannerWidth))
-	fmt.Printf("\nProject directory: %s\n", cfg.ProjectDir)
-	fmt.Printf("\nHarness directory: %s\n", cfg.HarnessDir)
-	if cfg.Harness.MaxIterations != nil {
-		fmt.Printf("\nMax iterations: %d\n", *cfg.Harness.MaxIterations)
-	} else {
-		fmt.Printf("\nMax iterations: Unlimited\n")
-	}
-	fmt.Println()
-
 	// Show initial progress
 	if tracker.IsInitialized() {
-		tracker.DisplaySummary()
+		if summary := tracker.Summary(); summary != "" {
+			om.printLorah("%s\n", summary)
+		}
 	}
 
 	// Main loop
@@ -286,7 +283,7 @@ func RunAgent(ctx context.Context, cfg *HarnessConfig) error {
 
 		// Check max iterations
 		if cfg.Harness.MaxIterations != nil && iteration > *cfg.Harness.MaxIterations {
-			fmt.Printf("\nReached max iterations (%d)\n", *cfg.Harness.MaxIterations)
+			om.printLorah("Reached max iterations (%d)\n", *cfg.Harness.MaxIterations)
 			break
 		}
 
@@ -294,7 +291,7 @@ func RunAgent(ctx context.Context, cfg *HarnessConfig) error {
 		phaseName, promptFile := SelectPhase(tracker, state)
 		if phaseName == "" {
 			// All work complete
-			fmt.Printf("\nAll phases completed.\n")
+			om.printLorah("All phases completed.\n")
 			exitReason = "ALL COMPLETE"
 			break
 		}
@@ -316,12 +313,10 @@ func RunAgent(ctx context.Context, cfg *HarnessConfig) error {
 		}
 
 		// Print session header
-		fmt.Printf("\n%s\n", strings.Repeat("=", bannerWidth))
-		fmt.Printf("  SESSION %d: %s\n", state.SessionNumber, strings.ToUpper(phaseName))
-		fmt.Printf("%s\n\n", strings.Repeat("=", bannerWidth))
+		om.printLorah("\nSESSION %d: %s\n", state.SessionNumber, strings.ToUpper(phaseName))
 
 		// Run session (model configured in settings.json)
-		result, runErr := RunSession(ctx, cfg, prompt)
+		result, runErr := RunSession(ctx, cfg, prompt, om)
 		if runErr != nil {
 			return fmt.Errorf("run session: %w", runErr)
 		}
@@ -331,21 +326,23 @@ func RunAgent(ctx context.Context, cfg *HarnessConfig) error {
 			lastErrorMessage = ""
 
 			// Mark initialization phase as completed (run_once)
-			if phaseName == "initialization" && !containsString(state.CompletedPhases, phaseName) {
+			if phaseName == "initialization" && !slices.Contains(state.CompletedPhases, phaseName) {
 				state.CompletedPhases = append(state.CompletedPhases, phaseName)
 			}
 
-			fmt.Printf("\nAgent will auto-continue in %ds...\n", cfg.Harness.AutoContinueDelay)
-			tracker.DisplaySummary()
+			SaveSession(cfg, state)
 
 			if tracker.IsComplete() {
-				fmt.Printf("\n✓ All items passing! Agent work is complete.\n")
+				om.printLorah("✓ All items passing! Agent work is complete.\n")
 				exitReason = "ALL COMPLETE"
-				SaveSession(cfg, state)
 				break
 			}
 
-			SaveSession(cfg, state)
+			if summary := tracker.Summary(); summary != "" {
+				om.printLorah("%s\n", summary)
+			}
+
+			om.printLorah("Agent will auto-continue in %ds...\n", cfg.Harness.AutoContinueDelay)
 			time.Sleep(time.Duration(cfg.Harness.AutoContinueDelay) * time.Second)
 
 		} else { // result.IsError == true
@@ -358,34 +355,32 @@ func RunAgent(ctx context.Context, cfg *HarnessConfig) error {
 
 			backoff := BackoffDuration(consecutiveErrors, cfg.Harness.ErrorRecovery)
 
-			fmt.Printf(
-				"\nSession encountered an error (attempt %d/%d)\n",
+			om.printLorah(
+				"Session encountered an error (attempt %d/%d)\n",
 				consecutiveErrors,
 				cfg.Harness.ErrorRecovery.MaxConsecutiveErrors,
 			)
 
 			if consecutiveErrors >= cfg.Harness.ErrorRecovery.MaxConsecutiveErrors {
-				fmt.Printf(
-					"\nReached maximum consecutive errors (%d)\n",
+				om.printLorah(
+					"Reached maximum consecutive errors (%d)\n",
 					cfg.Harness.ErrorRecovery.MaxConsecutiveErrors,
 				)
 				exitReason = "TOO MANY ERRORS"
 				break
 			}
 
-			fmt.Printf("Will retry with a fresh session in %.1fs...\n", backoff.Seconds())
+			om.printLorah("Will retry with a fresh session in %.1fs...\n", backoff.Seconds())
 			time.Sleep(backoff)
 		}
 	}
 
 	// Final summary
-	fmt.Printf("\n%s\n", strings.Repeat("=", bannerWidth))
-	fmt.Printf("  %s\n", exitReason)
-	fmt.Printf("%s\n", strings.Repeat("=", bannerWidth))
-	fmt.Printf("\nOutput directory: %s\n", cfg.ProjectDir)
-	tracker.DisplaySummary()
-
-	fmt.Printf("\nDone!\n")
+	om.printLorah("%s\n", exitReason)
+	if summary := tracker.Summary(); summary != "" {
+		om.printLorah("%s\n", summary)
+	}
+	om.printLorah("\nDone!\n")
 	return nil
 }
 
@@ -397,14 +392,4 @@ func truncateString(s string, maxLen int) string {
 		return s
 	}
 	return string(runes[:maxLen])
-}
-
-// containsString returns true if slice contains the target string.
-func containsString(slice []string, target string) bool {
-	for _, s := range slice {
-		if s == target {
-			return true
-		}
-	}
-	return false
 }

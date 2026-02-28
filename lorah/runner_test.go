@@ -226,7 +226,7 @@ type mockTracker struct {
 func (m *mockTracker) GetSummary() (int, int) { return 0, 0 }
 func (m *mockTracker) IsInitialized() bool    { return m.initialized }
 func (m *mockTracker) IsComplete() bool       { return m.complete }
-func (m *mockTracker) DisplaySummary()        {}
+func (m *mockTracker) Summary() string        { return "" }
 
 func TestSelectPhase_InitializationWhenNotInitialized(t *testing.T) {
 	tracker := &mockTracker{initialized: false}
@@ -313,25 +313,6 @@ func TestBackoffDuration_Capped(t *testing.T) {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-func TestContainsString(t *testing.T) {
-	tests := []struct {
-		slice  []string
-		target string
-		want   bool
-	}{
-		{[]string{"a", "b", "c"}, "b", true},
-		{[]string{"a", "b", "c"}, "d", false},
-		{[]string{}, "a", false},
-		{nil, "a", false},
-	}
-	for _, tt := range tests {
-		got := containsString(tt.slice, tt.target)
-		if got != tt.want {
-			t.Errorf("containsString(%v, %q) = %v, want %v", tt.slice, tt.target, got, tt.want)
-		}
-	}
-}
 
 func TestTruncateString(t *testing.T) {
 	tests := []struct {

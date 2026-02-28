@@ -1,6 +1,7 @@
 package lorah
 
 import (
+	"bytes"
 	"context"
 	"strings"
 	"testing"
@@ -171,5 +172,234 @@ func TestBuildCommand_EnvSet(t *testing.T) {
 	// Should have at least some environment variables
 	if len(cmd.Env) == 0 {
 		t.Error("expected cmd.Env to be non-empty")
+	}
+}
+
+// ─── outputManager ───────────────────────────────────────────────────────────
+
+func TestOutputManager_TagSwitching(t *testing.T) {
+	var buf bytes.Buffer
+	om := &outputManager{writer: &buf}
+
+	// First lorah message should print header
+	om.printLorah("first lorah message\n")
+	output := buf.String()
+	if !strings.Contains(output, "==> LORAH\n") {
+		t.Error("First lorah message should print LORAH header")
+	}
+	if !strings.Contains(output, "first lorah message") {
+		t.Error("First lorah message should contain message text")
+	}
+
+	buf.Reset()
+
+	// Second lorah message should NOT print header
+	om.printLorah("second lorah message\n")
+	output = buf.String()
+	if strings.Contains(output, "==> LORAH\n") {
+		t.Error("Second consecutive lorah message should not print LORAH header")
+	}
+	if !strings.Contains(output, "second lorah message") {
+		t.Error("Second lorah message should contain message text")
+	}
+
+	buf.Reset()
+
+	// Claude message should print CLAUDE header
+	om.printClaude("claude response")
+	output = buf.String()
+	if !strings.Contains(output, "==> CLAUDE\n") {
+		t.Error("First claude message should print CLAUDE header")
+	}
+	if !strings.Contains(output, "claude response") {
+		t.Error("First claude message should contain message text")
+	}
+
+	buf.Reset()
+
+	// Back to lorah should print header again
+	om.printLorah("back to lorah\n")
+	output = buf.String()
+	if !strings.Contains(output, "==> LORAH\n") {
+		t.Error("Switching back to lorah should print LORAH header")
+	}
+	if !strings.Contains(output, "back to lorah") {
+		t.Error("Message should contain text")
+	}
+
+	buf.Reset()
+
+	// Thinking message should print CLAUDE (thinking) header
+	om.printThinking("considering the approach...")
+	output = buf.String()
+	if !strings.Contains(output, "==> CLAUDE (thinking)\n") {
+		t.Error("First thinking message should print CLAUDE (thinking) header")
+	}
+	if !strings.Contains(output, "considering the approach...") {
+		t.Error("First thinking message should contain message text")
+	}
+
+	buf.Reset()
+
+	// Second thinking message should NOT print header
+	om.printThinking("more thinking...")
+	output = buf.String()
+	if strings.Contains(output, "==> CLAUDE (thinking)\n") {
+		t.Error("Second consecutive thinking message should not print CLAUDE (thinking) header")
+	}
+	if !strings.Contains(output, "more thinking...") {
+		t.Error("Second thinking message should contain message text")
+	}
+
+	buf.Reset()
+
+	// After claude response, tool should print its own header
+	om.printTool("BASH", "ls -la")
+	output = buf.String()
+	if !strings.Contains(output, "BASH") {
+		t.Error("Tool should print tool name header")
+	}
+	if !strings.Contains(output, "ls -la") {
+		t.Error("Tool should print content")
+	}
+	if om.lastSource != "tool" {
+		t.Errorf("lastSource should be 'tool', got %q", om.lastSource)
+	}
+
+	buf.Reset()
+
+	// Tool with empty content should still print header (no content line)
+	om.printTool("READ", "")
+	output = buf.String()
+	if !strings.Contains(output, "READ") {
+		t.Error("Tool with empty content should print tool name header")
+	}
+	lines := strings.Split(strings.TrimSpace(output), "\n")
+	if len(lines) != 1 {
+		t.Errorf("Tool with empty content should print only header line, got %d lines", len(lines))
+	}
+}
+
+func TestOutputManager_InitialState(t *testing.T) {
+	var buf bytes.Buffer
+	om := &outputManager{writer: &buf}
+
+	// Very first message should print tag
+	om.printClaude("first message ever")
+	output := buf.String()
+	if !strings.Contains(output, "==> CLAUDE\n") {
+		t.Error("Very first message should print tag header")
+	}
+}
+
+// ─── formatToolUse ───────────────────────────────────────────────────────────
+
+func TestFormatToolUse(t *testing.T) {
+	tests := []struct {
+		name  string
+		tool  string
+		input map[string]any
+		want  string
+	}{
+		{
+			name:  "Bash command",
+			tool:  "Bash",
+			input: map[string]any{"command": "ls -la"},
+			want:  "ls -la",
+		},
+		{
+			name:  "Read file_path",
+			tool:  "Read",
+			input: map[string]any{"file_path": "/tmp/foo.txt"},
+			want:  "/tmp/foo.txt",
+		},
+		{
+			name:  "Edit file_path",
+			tool:  "Edit",
+			input: map[string]any{"file_path": "/tmp/bar.go", "old_string": "foo", "new_string": "bar"},
+			want:  "/tmp/bar.go",
+		},
+		{
+			name:  "Write file_path",
+			tool:  "Write",
+			input: map[string]any{"file_path": "/tmp/new.txt", "content": "hello"},
+			want:  "/tmp/new.txt",
+		},
+		{
+			name:  "Grep pattern",
+			tool:  "Grep",
+			input: map[string]any{"pattern": "TODO", "path": "/src"},
+			want:  "TODO",
+		},
+		{
+			name:  "Glob pattern",
+			tool:  "Glob",
+			input: map[string]any{"pattern": "**/*.go"},
+			want:  "**/*.go",
+		},
+		{
+			name:  "WebFetch url",
+			tool:  "WebFetch",
+			input: map[string]any{"url": "https://example.com", "prompt": "Extract title"},
+			want:  "https://example.com",
+		},
+		{
+			name:  "Task description",
+			tool:  "Task",
+			input: map[string]any{"description": "Run tests", "subagent_type": "test-runner"},
+			want:  "Run tests",
+		},
+		{
+			name:  "Unknown tool",
+			tool:  "UnknownTool",
+			input: map[string]any{"foo": "bar"},
+			want:  "",
+		},
+		{
+			name:  "Missing parameter",
+			tool:  "Bash",
+			input: map[string]any{"other": "value"},
+			want:  "",
+		},
+		{
+			name:  "Wrong type for parameter",
+			tool:  "Read",
+			input: map[string]any{"file_path": 123},
+			want:  "",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := formatToolUse(tt.tool, tt.input)
+			if got != tt.want {
+				t.Errorf("formatToolUse(%q, %v) = %q, want %q", tt.tool, tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
+// ─── spinner ─────────────────────────────────────────────────────────────────
+
+func TestSpinner_TerminalDetection(t *testing.T) {
+	// Test with bytes.Buffer (not a terminal)
+	var buf bytes.Buffer
+	s := newSpinner(&buf)
+	if s != nil {
+		t.Error("Spinner should be nil for non-terminal writer (bytes.Buffer)")
+	}
+}
+
+func TestSpinner_NilSafe(t *testing.T) {
+	var buf bytes.Buffer
+	s := newSpinner(&buf) // Not a terminal, will be nil
+
+	// These operations should be no-ops and not panic
+	s.start()
+	s.stop()
+
+	// Buffer should be empty (no escape codes written)
+	if buf.Len() > 0 {
+		t.Errorf("Nil spinner should not write to buffer, got: %q", buf.String())
 	}
 }

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Progress spinner while waiting for Claude CLI responses
+- Tool activity display showing current operations
+
+### Changed
+
+- Output tagged by source to distinguish harness messages from agent responses
+
 ## [0.2.0] - 2026-02-24
 
 ### Added

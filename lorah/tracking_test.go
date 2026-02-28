@@ -1,25 +1,11 @@
 package lorah
 
 import (
-	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 )
-
-// captureOutput captures stdout during fn execution.
-func captureOutput(fn func()) string {
-	old := os.Stdout
-	r, w, _ := os.Pipe()
-	os.Stdout = w
-	fn()
-	w.Close()
-	os.Stdout = old
-	var sb strings.Builder
-	io.Copy(&sb, r)
-	return sb.String()
-}
 
 // writeFile creates a file with the given content in the temp directory.
 func writeFile(t *testing.T, dir, name, content string) string {
@@ -142,25 +128,25 @@ func TestJsonChecklistTracker_IsComplete(t *testing.T) {
 	}
 }
 
-func TestJsonChecklistTracker_DisplaySummary_WithItems(t *testing.T) {
+func TestJsonChecklistTracker_Summary_WithItems(t *testing.T) {
 	dir := t.TempDir()
 	content := `[{"passes": true}, {"passes": false}, {"passes": true}]`
 	writeFile(t, dir, TaskListFile, content)
 	tr := NewJsonChecklistTracker(dir)
-	output := captureOutput(func() { tr.DisplaySummary() })
+	output := tr.Summary()
 	if !strings.Contains(output, "2/3") {
-		t.Errorf("DisplaySummary() output %q missing '2/3'", output)
+		t.Errorf("Summary() output %q missing '2/3'", output)
 	}
 	if !strings.Contains(output, "66.7%") {
-		t.Errorf("DisplaySummary() output %q missing '66.7%%'", output)
+		t.Errorf("Summary() output %q missing '66.7%%'", output)
 	}
 }
 
-func TestJsonChecklistTracker_DisplaySummary_NoFile(t *testing.T) {
+func TestJsonChecklistTracker_Summary_NoFile(t *testing.T) {
 	dir := t.TempDir()
 	tr := NewJsonChecklistTracker(dir)
-	output := captureOutput(func() { tr.DisplaySummary() })
+	output := tr.Summary()
 	if !strings.Contains(output, "not yet created") {
-		t.Errorf("DisplaySummary() output %q missing 'not yet created'", output)
+		t.Errorf("Summary() output %q missing 'not yet created'", output)
 	}
 }

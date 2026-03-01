@@ -184,8 +184,8 @@ func TestOutputManager_TagSwitching(t *testing.T) {
 	// First lorah message should print header
 	om.printLorah("first lorah message\n")
 	output := buf.String()
-	if !strings.Contains(output, "==> LORAH\n") {
-		t.Error("First lorah message should print LORAH header")
+	if !strings.Contains(output, "Lorah") {
+		t.Error("First lorah message should print Lorah header")
 	}
 	if !strings.Contains(output, "first lorah message") {
 		t.Error("First lorah message should contain message text")
@@ -193,11 +193,11 @@ func TestOutputManager_TagSwitching(t *testing.T) {
 
 	buf.Reset()
 
-	// Second lorah message should NOT print header
+	// Second lorah message should also print header (always prints now)
 	om.printLorah("second lorah message\n")
 	output = buf.String()
-	if strings.Contains(output, "==> LORAH\n") {
-		t.Error("Second consecutive lorah message should not print LORAH header")
+	if !strings.Contains(output, "Lorah") {
+		t.Error("Second lorah message should print Lorah header")
 	}
 	if !strings.Contains(output, "second lorah message") {
 		t.Error("Second lorah message should contain message text")
@@ -205,23 +205,23 @@ func TestOutputManager_TagSwitching(t *testing.T) {
 
 	buf.Reset()
 
-	// Claude message should print CLAUDE header
+	// Claude message should print Claude header
 	om.printClaude("claude response")
 	output = buf.String()
-	if !strings.Contains(output, "==> CLAUDE\n") {
-		t.Error("First claude message should print CLAUDE header")
+	if !strings.Contains(output, "Claude") {
+		t.Error("Claude message should print Claude header")
 	}
 	if !strings.Contains(output, "claude response") {
-		t.Error("First claude message should contain message text")
+		t.Error("Claude message should contain message text")
 	}
 
 	buf.Reset()
 
-	// Back to lorah should print header again
+	// Back to lorah should print header
 	om.printLorah("back to lorah\n")
 	output = buf.String()
-	if !strings.Contains(output, "==> LORAH\n") {
-		t.Error("Switching back to lorah should print LORAH header")
+	if !strings.Contains(output, "Lorah") {
+		t.Error("Lorah message should print Lorah header")
 	}
 	if !strings.Contains(output, "back to lorah") {
 		t.Error("Message should contain text")
@@ -229,23 +229,23 @@ func TestOutputManager_TagSwitching(t *testing.T) {
 
 	buf.Reset()
 
-	// Thinking message should print CLAUDE (thinking) header
+	// Thinking message should print Claude (thinking) header
 	om.printThinking("considering the approach...")
 	output = buf.String()
-	if !strings.Contains(output, "==> CLAUDE (thinking)\n") {
-		t.Error("First thinking message should print CLAUDE (thinking) header")
+	if !strings.Contains(output, "Claude (thinking)") {
+		t.Error("Thinking message should print Claude (thinking) header")
 	}
 	if !strings.Contains(output, "considering the approach...") {
-		t.Error("First thinking message should contain message text")
+		t.Error("Thinking message should contain message text")
 	}
 
 	buf.Reset()
 
-	// Second thinking message should NOT print header
+	// Second thinking message should also print header
 	om.printThinking("more thinking...")
 	output = buf.String()
-	if strings.Contains(output, "==> CLAUDE (thinking)\n") {
-		t.Error("Second consecutive thinking message should not print CLAUDE (thinking) header")
+	if !strings.Contains(output, "Claude (thinking)") {
+		t.Error("Second thinking message should print Claude (thinking) header")
 	}
 	if !strings.Contains(output, "more thinking...") {
 		t.Error("Second thinking message should contain message text")
@@ -253,10 +253,10 @@ func TestOutputManager_TagSwitching(t *testing.T) {
 
 	buf.Reset()
 
-	// After claude response, tool should print its own header
-	om.printTool("BASH", "ls -la")
+	// Tool should print its own header
+	om.printTool("Bash", "ls -la")
 	output = buf.String()
-	if !strings.Contains(output, "BASH") {
+	if !strings.Contains(output, "Bash") {
 		t.Error("Tool should print tool name header")
 	}
 	if !strings.Contains(output, "ls -la") {
@@ -269,9 +269,9 @@ func TestOutputManager_TagSwitching(t *testing.T) {
 	buf.Reset()
 
 	// Tool with empty content should still print header (no content line)
-	om.printTool("READ", "")
+	om.printTool("Read", "")
 	output = buf.String()
-	if !strings.Contains(output, "READ") {
+	if !strings.Contains(output, "Read") {
 		t.Error("Tool with empty content should print tool name header")
 	}
 	lines := strings.Split(strings.TrimSpace(output), "\n")
@@ -287,7 +287,7 @@ func TestOutputManager_InitialState(t *testing.T) {
 	// Very first message should print tag
 	om.printClaude("first message ever")
 	output := buf.String()
-	if !strings.Contains(output, "==> CLAUDE\n") {
+	if !strings.Contains(output, "Claude") {
 		t.Error("Very first message should print tag header")
 	}
 }

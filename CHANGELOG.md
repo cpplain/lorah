@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Progress spinner while waiting for Claude CLI responses
 - Tool activity display showing current operations
+- Color-coded section headers for improved output readability
 
 ### Changed
 

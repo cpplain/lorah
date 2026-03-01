@@ -19,6 +19,13 @@ import (
 	"time"
 )
 
+const (
+	colorReset = "\033[0m"
+	colorGreen = "\033[32m"
+	colorBlue  = "\033[34m"
+	colorBold  = "\033[1m"
+)
+
 // isTerminal returns true if the file is a terminal (TTY).
 func isTerminal(f *os.File) bool {
 	stat, err := f.Stat()
@@ -35,28 +42,24 @@ type outputManager struct {
 	writer     io.Writer
 }
 
-// printLorah prints harness output with LORAH tag.
+// printLorah prints harness output with Lorah tag.
 func (om *outputManager) printLorah(format string, args ...any) {
 	om.mu.Lock()
 	defer om.mu.Unlock()
 
-	if om.lastSource != "lorah" {
-		fmt.Fprint(om.writer, "==> LORAH\n")
-		om.lastSource = "lorah"
-	}
+	fmt.Fprint(om.writer, colorBlue+"==> "+colorReset+colorBold+"Lorah"+colorReset+"\n")
 	fmt.Fprintf(om.writer, format, args...)
+	om.lastSource = "lorah"
 }
 
-// printClaude prints Claude output with CLAUDE tag.
+// printClaude prints Claude output with Claude tag.
 func (om *outputManager) printClaude(text string) {
 	om.mu.Lock()
 	defer om.mu.Unlock()
 
-	if om.lastSource != "claude" {
-		fmt.Fprint(om.writer, "==> CLAUDE\n")
-		om.lastSource = "claude"
-	}
+	fmt.Fprint(om.writer, colorBlue+"==> "+colorReset+colorBold+"Claude"+colorReset+"\n")
 	fmt.Fprintf(om.writer, "%s\n", text)
+	om.lastSource = "claude"
 }
 
 // printThinking prints Claude's extended thinking with tag.
@@ -64,11 +67,9 @@ func (om *outputManager) printThinking(text string) {
 	om.mu.Lock()
 	defer om.mu.Unlock()
 
-	if om.lastSource != "thinking" {
-		fmt.Fprint(om.writer, "==> CLAUDE (thinking)\n")
-		om.lastSource = "thinking"
-	}
+	fmt.Fprint(om.writer, colorBlue+"==> "+colorReset+colorBold+"Claude (thinking)"+colorReset+"\n")
 	fmt.Fprintf(om.writer, "%s\n", text)
+	om.lastSource = "thinking"
 }
 
 // printTool prints tool invocation output.
@@ -77,9 +78,9 @@ func (om *outputManager) printTool(toolName string, content string) {
 	defer om.mu.Unlock()
 
 	if content == "" {
-		fmt.Fprintf(om.writer, "==> %s\n", toolName)
+		fmt.Fprintf(om.writer, colorGreen+"==> "+colorReset+colorBold+"%s"+colorReset+"\n", toolName)
 	} else {
-		fmt.Fprintf(om.writer, "==> %s\n%s\n", toolName, content)
+		fmt.Fprintf(om.writer, colorGreen+"==> "+colorReset+colorBold+"%s"+colorReset+"\n%s\n", toolName, content)
 	}
 	om.lastSource = "tool"
 }
@@ -183,7 +184,6 @@ func (s *spinner) start() {
 	s.stopCh = make(chan struct{})
 	s.doneCh = make(chan struct{})
 
-	fmt.Fprint(s.writer, "\n")                 // blank line before spinner
 	fmt.Fprint(s.writer, "\033[?25l")          // hide cursor
 	fmt.Fprint(s.writer, spinnerFrames[0]+" ") // initial frame
 
@@ -317,7 +317,10 @@ func RunSession(ctx context.Context, cfg *HarnessConfig, prompt string, om *outp
 					case *ThinkingBlock:
 						om.printThinking(b.Thinking)
 					case *ToolUseBlock:
-						toolName := strings.ToUpper(b.Name)
+						toolName := b.Name
+						if len(toolName) > 0 {
+							toolName = strings.ToUpper(toolName[:1]) + strings.ToLower(toolName[1:])
+						}
 						content := formatToolUse(b.Name, b.Input)
 						if lines := strings.Split(content, "\n"); len(lines) > 3 {
 							content = strings.Join(lines[:3], "\n") + fmt.Sprintf("\n... +%d lines", len(lines)-3)

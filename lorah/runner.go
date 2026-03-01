@@ -313,7 +313,11 @@ func RunAgent(ctx context.Context, cfg *HarnessConfig) error {
 		}
 
 		// Print session header
-		om.printLorah("\nSESSION %d: %s\n", state.SessionNumber, strings.ToUpper(phaseName))
+		phaseTitle := phaseName
+		if len(phaseTitle) > 0 {
+			phaseTitle = strings.ToUpper(phaseTitle[:1]) + strings.ToLower(phaseTitle[1:])
+		}
+		om.printLorah("Session %d (Phase: %s)\n", state.SessionNumber, phaseTitle)
 
 		// Run session (model configured in settings.json)
 		result, runErr := RunSession(ctx, cfg, prompt, om)

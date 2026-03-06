@@ -1,4 +1,4 @@
-.PHONY: help build clean test fmt lint check install
+.PHONY: help build clean fmt lint install
 
 # Default target - show help
 help:
@@ -11,10 +11,8 @@ help:
 	@echo "  build          Build the lorah binary"
 	@echo "  install        Install lorah to GOPATH/bin"
 	@echo "  clean          Remove build artifacts"
-	@echo "  test           Run all tests with race detector"
 	@echo "  fmt            Format all Go code"
 	@echo "  lint           Run go vet for static analysis"
-	@echo "  check          Run fmt, test, and lint in sequence"
 
 # Build the lorah binary
 build:
@@ -33,10 +31,6 @@ install:
 clean:
 	rm -rf ./bin
 
-# Run tests with race detector
-test:
-	go test -race ./...
-
 # Format code
 fmt:
 	@if command -v goimports >/dev/null 2>&1; then \
@@ -51,6 +45,3 @@ fmt:
 lint:
 	@echo "Running go vet..."
 	go vet ./...
-
-# Run all checks
-check: fmt test lint

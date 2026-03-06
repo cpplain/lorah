@@ -229,7 +229,7 @@ func printMessages(r io.Reader) {
 					if content != "" {
 						lines := strings.Split(content, "\n")
 						if len(lines) > 3 {
-							content = strings.Join(lines[:3], "\n") + "\n..."
+							content = strings.Join(lines[:3], "\n") + fmt.Sprintf("\n... +%d lines", len(lines)-3)
 						}
 					}
 

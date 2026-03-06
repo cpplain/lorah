@@ -1,24 +1,45 @@
 # Lorah
 
-A configurable harness for long-running autonomous coding agents.
+**LO**ng-**R**unning **A**gent **H**arness
 
-## What is Lorah?
+An infinite-loop harness for Claude Code CLI following the [Ralph technique](https://ghuntley.com/ralph/).
 
-Lorah enables multi-phase agent execution by orchestrating the Claude Code CLI in isolated sessions. Instead of running Claude once and hoping for the best, Lorah breaks complex projects into phases (initialization, implementation, review) with automatic error recovery, progress tracking, and state persistence.
+## Why Lorah?
+
+The Ralph technique can be implemented with a simple bash loop:
+
+```bash
+while true; do cat PROMPT.md | claude -p --verbose --output-format stream-json; done
+```
+
+But you get raw `stream-json` output that's unreadable:
+
+```
+{"type":"assistant","message":{"content":[{"type":"text","text":"Let me read..."}]}}
+{"type":"assistant","message":{"content":[{"type":"tool_use","name":"Read","input":{"file_path":"/path/to/file"}}]}}
+```
+
+**Lorah gives you clean, color-coded output:**
+
+```
+==> Claude
+Let me read the file
+==> Read
+/path/to/file
+```
+
+Plus automatic error recovery, graceful shutdown, and full Claude CLI compatibility.
 
 **Key Features:**
 
-- **Multi-phase execution** - Break complex projects into manageable phases
-- **Automatic error recovery** - Exponential backoff and retry logic
-- **Progress tracking** - JSON checklists, notes files, or silent mode
-- **MCP server integration** - Full tool ecosystem support
-- **Session isolation** - Each phase runs in a fresh sandbox
-- **State persistence** - Resume work across sessions
+- **Formatted output** - Color-coded sections and tool activity (the main reason Lorah exists)
+- **Simple infinite loop** - Runs continuously until you stop it
+- **Automatic error recovery** - Retries on failures with 5-second delay
+- **Flag passthrough** - All Claude CLI flags work transparently
 
 ## Prerequisites
 
-- [Claude Code CLI](https://claude.ai/code) - Required for agent execution
-- Authentication via Claude Code login (Max/Enterprise subscription recommended) or API key
+[Claude Code](https://claude.ai/code) - Required for agent execution
 
 ## Installation
 
@@ -26,95 +47,25 @@ Lorah enables multi-phase agent execution by orchestrating the Claude Code CLI i
 brew install cpplain/tap/lorah
 ```
 
-## Quick Start
+## Usage
 
-**1. Initialize a new project**
+Lorah is an implementatioin of the Ralph loop. You must understand the Ralph technique to use Lorah effectively.
 
-```bash
-lorah init --project-dir ./my-project
-```
+Learn more about the Ralph technique: [Ralph Wiggum as a "software engineer"](https://ghuntley.com/ralph/) by Geoffrey Huntley
 
-This scaffolds a `.lorah/` directory with starter configuration and prompts.
-
-**2. Edit your project specification**
-
-Open `.lorah/spec.md` and describe what you're building:
-
-```markdown
-# My Web App
-
-## Overview
-
-A React dashboard with real-time metrics
-
-## Requirements
-
-- User authentication with JWT
-- Dashboard with charts
-- REST API backend
-```
-
-**3. Verify your setup**
+**Syntax:**
 
 ```bash
-lorah verify --project-dir ./my-project
+lorah <prompt-file> [claude-flags...]
 ```
 
-This checks that Claude Code CLI is accessible and your configuration is valid.
-
-**4. Run the agent**
+**Examples:**
 
 ```bash
-lorah run --project-dir ./my-project
+lorah PROMPT.md
+lorah PROMPT.md --settings .lorah/settings.json
+lorah PROMPT.md --model claude-opus-4-6 --max-turns 50
 ```
-
-Lorah executes each phase sequentially. The agent reads your spec and builds your project according to the configured phases.
-
-## Learn More
-
-- **[Getting Started](docs/getting-started.md)** - Detailed configuration and usage
-- **[Examples](examples/)** - Sample projects with working configurations
-  - [Simple Calculator](examples/simple-calculator/) - Basic Python CLI app
-  - [Claude.ai Clone](examples/claude-ai-clone/) - Full-stack web application
-
-## How It Works
-
-Lorah runs a two-phase execution loop: **initialization** (runs once) and **implementation** (iterative). Each phase invokes the Claude Code CLI subprocess in an isolated session with its corresponding prompt. This design follows the patterns described in Anthropic's [Effective Harnesses for Long-Running Agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) article.
-
-Configuration is **optional** and driven by `.lorah/config.json`. Reasonable defaults work out of the box - only configure what you need to override:
-
-```json
-{
-  "harness": {
-    "max-iterations": 20
-  },
-  "claude": {
-    "settings": {
-      "sandbox": {
-        "network": {
-          "allowedDomains": ["registry.npmjs.org", "pypi.org"]
-        }
-      }
-    }
-  }
-}
-```
-
-The config has two sections:
-
-- **`harness`** - Lorah-specific settings (iterations, delays, error recovery)
-- **`claude`** - Passthrough to Claude CLI
-  - `flags` - CLI flags (e.g., `--max-turns`) - see [CLI Reference](https://code.claude.com/docs/en/cli-reference)
-  - `settings` - Settings JSON (model, permissions, sandbox) - see [Settings](https://code.claude.com/docs/en/settings)
-
-The harness uses fixed file names:
-
-- `prompts/initialization.md` - one-time setup phase
-- `prompts/implementation.md` - iterative build phase
-- `tasks.json` - progress tracking checklist
-- `progress.md` - session handoff notes
-
-Session state persists in `.lorah/session.json`.
 
 ## License
 

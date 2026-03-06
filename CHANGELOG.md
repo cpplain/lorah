@@ -9,13 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Progress spinner while waiting for Claude CLI responses
-- Tool activity display showing current operations
-- Color-coded section headers for improved output readability
+- Infinite loop execution following [Ralph pattern](https://ghuntley.com/ralph/)
+- Direct flag passthrough to Claude CLI
 
 ### Changed
 
-- Output tagged by source to distinguish harness messages from agent responses
+- **BREAKING**: CLI interface changed to `lorah PROMPT.md [claude-flags...]` (was `lorah run --project-dir`)
+- **BREAKING**: Now follows Ralph technique instead of Anthropic's [effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)
+- **BREAKING**: Agent manages its own workflow autonomously (removed multi-phase orchestration, config system, session state, progress tracking)
+- Error retry uses fixed 5-second delay (was exponential backoff)
 
 ## [0.2.0] - 2026-02-24
 

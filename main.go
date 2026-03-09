@@ -36,10 +36,12 @@ const (
 
 // printSection outputs a labeled section with optional content.
 func printSection(label, color, content string) {
-	fmt.Printf("%s==>%s %s%s%s\n", color, colorReset, colorBold, label, colorReset)
+	fmt.Printf("%s⏺%s %s%s%s\n", color, colorReset, colorBold, label, colorReset)
 	if content != "" {
+		content = strings.TrimSpace(content)
 		fmt.Printf("%s\n", content)
 	}
+	fmt.Println()
 }
 
 func main() {
@@ -96,7 +98,7 @@ Flags:
 		printSection("Lorah", colorBlue, "Starting loop...")
 
 		if err := runClaude(ctx, promptFile, claudeFlags); err != nil {
-			fmt.Fprintf(os.Stderr, "\n%s==> %sError%s\n", colorRed, colorBold, colorReset)
+			fmt.Fprintf(os.Stderr, "\n%s⏺ %sError%s\n", colorRed, colorBold, colorReset)
 			fmt.Fprintf(os.Stderr, "%v\n\n", err)
 			fmt.Fprintf(os.Stderr, "Retrying in %v...\n\n", retryDelay)
 			time.Sleep(retryDelay)
@@ -225,11 +227,11 @@ func printMessages(r io.Reader) {
 						}
 					}
 
-					// Truncate to 3 lines if longer
+					// Truncate to 1 line if longer
 					if content != "" {
 						lines := strings.Split(content, "\n")
-						if len(lines) > 3 {
-							content = strings.Join(lines[:3], "\n") + fmt.Sprintf("\n... +%d lines", len(lines)-3)
+						if len(lines) > 1 {
+							content = strings.Join(lines[:1], "\n") + fmt.Sprintf("\n... +%d lines", len(lines)-1)
 						}
 					}
 

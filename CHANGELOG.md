@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Output sections now use `⏺` symbol instead of `==>`
+- Added blank line spacing between output sections for improved readability
+- Tool inputs now truncate to 1 line instead of 3 lines to prevent trailing blank lines
+
+### Fixed
+
+- Truncated tool inputs now display line count (e.g., "... +5 lines") instead of just "..."
+- Removed excessive blank lines caused by trailing whitespace in Claude output
+
 ## [0.3.0] - 2026-03-05
 
 ### Added

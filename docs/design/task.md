@@ -43,6 +43,7 @@ lorah task <subcommand> [args...] [flags...]
 | `get`      | `<id>`    | Get full details for a task       |
 | `create`   |           | Create a new task                 |
 | `update`   | `<id>`    | Update fields on an existing task |
+| `delete`   | `<id>`    | Delete a task                     |
 | `export`   |           | Export tasks to markdown          |
 
 ---
@@ -340,6 +341,16 @@ lorah task update <id> [--status=STATUS] [--subject="..."] [--phase=P] [--phase-
 - `--section-description` upserts the description on the section referenced by `--section`; requires `--section`
 - `--project-name` sets the `name` field on the `TaskList`
 - `--project-description` sets the `description` field on the `TaskList`
+
+### `delete`
+
+```
+lorah task delete <id>
+```
+
+- Exits 1 with error message if task not found
+- No output on success
+- Returns 0
 
 ### `export`
 

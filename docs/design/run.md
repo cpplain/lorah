@@ -140,8 +140,8 @@ func runClaude(ctx context.Context, promptFile string, flags []string) error
 | ----------------------------- | --------------------------------------- |
 | Prompt file not readable      | `"opening prompt file: "`               |
 | stdout pipe creation failure  | `"creating stdout pipe: "`              |
-| `claude` not found in PATH    | `"starting claude Code CLI: "`          |
-| Claude Code CLI non-zero exit | `"claude Code CLI exited with error: "` |
+| `claude` not found in PATH    | `"starting Claude Code CLI: "`          |
+| Claude Code CLI non-zero exit | `"Claude Code CLI exited with error: "` |
 
 ---
 

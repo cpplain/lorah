@@ -1,4 +1,4 @@
-.PHONY: help build clean fmt lint
+.PHONY: help build clean fmt lint test
 
 # Default target - show help
 help:
@@ -12,6 +12,7 @@ help:
 	@echo "  clean          Remove build artifacts"
 	@echo "  fmt            Format all Go code"
 	@echo "  lint           Run go vet for static analysis"
+	@echo "  test           Run all tests"
 
 # Build the lorah binary
 build:
@@ -38,3 +39,7 @@ fmt:
 lint:
 	@echo "Running go vet..."
 	go vet ./...
+
+# Run all tests
+test:
+	go test ./...

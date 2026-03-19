@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Subcommand-based CLI: `lorah <command> [arguments]` with `run` and `task` commands
+- Task management system (`lorah task`) with 8 subcommands: list, get, create, update, start, complete, export, stats
+- JSON-based task storage in `tasks.json` with Storage interface for future backend swaps
+- Two task output formats: json, markdown (default); `--flat` flag on `list` for flat bullet output
+
+### Changed
+
+- **BREAKING**: CLI changed to `lorah run <prompt-file> [claude-flags...]` (was `lorah <prompt-file> [claude-flags...]`)
+- **BREAKING**: Multi-package architecture replaces single-file structure (`main.go` router + `internal/loop/` + `internal/task/`)
+
 ## [0.4.0] - 2026-03-09
 
 ### Changed
@@ -25,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Infinite loop execution following [Ralph pattern](https://ghuntley.com/ralph/)
-- Direct flag passthrough to Claude CLI
+- Direct flag passthrough to Claude Code CLI
 
 ### Changed
 
@@ -42,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **BREAKING**: Configuration format changed to a split structure with `harness` (lorah settings) and `claude` (passthrough to Claude CLI) sections. Existing configs require migration—run `lorah info template` to see the new format.
+- **BREAKING**: Configuration format changed to a split structure with `harness` (lorah settings) and `claude` (passthrough to Claude Code CLI) sections. Existing configs require migration—run `lorah info template` to see the new format.
 - Updated documentation to document two-phase execution model with fixed file names (initialization and implementation phases)
 - Renamed `docs/setup-guide.md` to `docs/getting-started.md`
 - Renamed review workflow prompts from `inventory.md`/`fix.md` to `initialization.md`/`implementation.md`

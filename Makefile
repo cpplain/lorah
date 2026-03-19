@@ -1,4 +1,4 @@
-.PHONY: help build clean fmt lint install
+.PHONY: help build clean fmt lint
 
 # Default target - show help
 help:
@@ -9,7 +9,6 @@ help:
 	@echo "Targets:"
 	@echo "  help           Show this help message"
 	@echo "  build          Build the lorah binary"
-	@echo "  install        Install lorah to GOPATH/bin"
 	@echo "  clean          Remove build artifacts"
 	@echo "  fmt            Format all Go code"
 	@echo "  lint           Run go vet for static analysis"
@@ -20,12 +19,6 @@ build:
 	@VERSION=$$(date -u '+dev+%Y%m%d%H%M%S'); \
 	echo "Building lorah $$VERSION..."; \
 	go build -ldflags "-X 'main.Version=$$VERSION'" -o ./bin/lorah .
-
-# Install lorah to GOPATH/bin
-install:
-	@VERSION=$$(date -u '+dev+%Y%m%d%H%M%S'); \
-	echo "Installing lorah $$VERSION..."; \
-	go install -ldflags "-X 'main.Version=$$VERSION'" .
 
 # Clean build artifacts
 clean:

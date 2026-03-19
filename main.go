@@ -2,7 +2,7 @@
 //
 // Usage: lorah PROMPT.md [claude-flags...]
 //
-// Runs an infinite loop that executes Claude CLI with stream-JSON output,
+// Runs an infinite loop that executes Claude Code CLI with stream-JSON output,
 // parses messages, formats output with colors, and retries on errors.
 package main
 
@@ -56,7 +56,7 @@ func main() {
 		fmt.Fprint(os.Stderr, `Usage: lorah <prompt-file> [claude-flags...]
 
 Simple infinite-loop harness for Claude Code.
-Runs Claude CLI in a continuous loop with formatted output.
+Runs Claude Code CLI in a continuous loop with formatted output.
 
 Arguments:
   <prompt-file>      Path to prompt file (required, first argument)
@@ -110,7 +110,7 @@ Flags:
 	}
 }
 
-// runClaude executes a single Claude CLI session with the prompt file piped to stdin.
+// runClaude executes a single Claude Code CLI session with the prompt file piped to stdin.
 func runClaude(ctx context.Context, promptFile string, flags []string) error {
 	// Open prompt file to pipe as stdin
 	file, err := os.Open(promptFile)
@@ -138,14 +138,14 @@ func runClaude(ctx context.Context, promptFile string, flags []string) error {
 	}
 
 	if err := cmd.Start(); err != nil {
-		return fmt.Errorf("starting claude CLI: %w", err)
+		return fmt.Errorf("starting claude Code CLI: %w", err)
 	}
 
 	// Print formatted output in real-time
 	printMessages(stdout)
 
 	if err := cmd.Wait(); err != nil {
-		return fmt.Errorf("claude CLI exited with error: %w", err)
+		return fmt.Errorf("claude Code CLI exited with error: %w", err)
 	}
 
 	return nil

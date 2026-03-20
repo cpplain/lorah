@@ -464,7 +464,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
     covered. All tests pass.
   ```
 
-- [pending] Implement list flat and JSON formatters (format.go)
+- [completed] Implement list flat and JSON formatters (format.go)
 
   ```notes
   - Add to `internal/task/format.go`
@@ -478,6 +478,8 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Wrap tasks in `{"tasks": [...]}` envelope; `json.MarshalIndent`
 
   - All tests should pass
+  - NOTE: Overzealous prior agent already wrote full implementations of `renderFlatList` and
+    `FormatListJSON` in `internal/task/format.go`. All tests pass. Verified and marked completed.
   ```
 
 ### Export Formatter

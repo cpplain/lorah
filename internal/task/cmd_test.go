@@ -144,6 +144,16 @@ func TestMultiFlagSet(t *testing.T) {
 
 // --- HandleTask dispatch tests ---
 
+func TestHandleTaskHelp(t *testing.T) {
+	for _, arg := range []string{"--help", "-h"} {
+		var buf bytes.Buffer
+		code := HandleTask([]string{arg}, &buf, newMockStorage())
+		if code != 0 {
+			t.Errorf("HandleTask(%q): expected exit 0, got %d", arg, code)
+		}
+	}
+}
+
 func TestHandleTaskUnknownSubcommand(t *testing.T) {
 	var buf bytes.Buffer
 	code := HandleTask([]string{"bogus"}, &buf, newMockStorage())
@@ -607,6 +617,48 @@ func TestUpdateSetsLastUpdated(t *testing.T) {
 	updated := store.tasks["upd00005"]
 	if !updated.LastUpdated.After(past) {
 		t.Errorf("expected LastUpdated to be updated, old=%v new=%v", past, updated.LastUpdated)
+	}
+}
+
+// --- delete tests ---
+
+func TestDeleteByID(t *testing.T) {
+	store := newMockStorage()
+	now := time.Now()
+	task := &Task{ID: "del00001", Subject: "Delete me", Status: StatusPending, LastUpdated: now}
+	store.tasks["del00001"] = task
+	store.list.Tasks = []Task{*task}
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"delete", "del00001"}, &buf, store)
+	if code != 0 {
+		t.Errorf("expected exit 0, got %d", code)
+	}
+	if buf.Len() > 0 {
+		t.Errorf("expected no output on successful delete, got:\n%s", buf.String())
+	}
+	if _, err := store.Get("del00001"); err == nil {
+		t.Errorf("expected task to be deleted, but it still exists")
+	}
+}
+
+func TestDeleteCmdNotFound(t *testing.T) {
+	store := newMockStorage()
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"delete", "notexist"}, &buf, store)
+	if code != 1 {
+		t.Errorf("expected exit 1 for missing task, got %d", code)
+	}
+}
+
+func TestDeleteMissingID(t *testing.T) {
+	store := newMockStorage()
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"delete"}, &buf, store)
+	if code != 1 {
+		t.Errorf("expected exit 1 when ID not provided, got %d", code)
 	}
 }
 

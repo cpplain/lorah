@@ -528,7 +528,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
 ### Dispatch
 
-- [pending] Write tests for dispatch (cmd.go)
+- [completed] Write tests for dispatch (cmd.go)
 
   ```notes
   - Test in `internal/task/cmd_test.go`
@@ -549,6 +549,12 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
   - Add `HandleTask` stub returning 1 and `multiFlag` type stub in `internal/task/cmd.go` for compilation
   - All tests should fail as expected (stub returns 1); no panics
+  - NOTE: Overzealous prior agent had already written the mockStorage, multiFlag tests, dispatch tests
+    (unknown/no-args), and full subcommand tests for list/get/create/update/export + full cmd.go
+    implementation. Added missing tests: TestHandleTaskHelp (--help/-h returns 0, FAILS — no
+    implementation), TestDeleteByID/TestDeleteCmdNotFound/TestDeleteMissingID (FAIL/PASS/PASS — stub
+    returns 1). Added deleteCmd stub and "delete" case to switch in cmd.go for compilation.
+  - Next task (Implement dispatch): must add --help/-h handling to HandleTask and implement deleteCmd
   ```
 
 - [pending] Implement dispatch (cmd.go)

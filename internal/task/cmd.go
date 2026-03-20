@@ -46,6 +46,8 @@ func HandleTask(args []string, w io.Writer, storage Storage) int {
 		return createCmd(args[1:], w, storage)
 	case "update":
 		return updateCmd(args[1:], w, storage)
+	case "delete":
+		return deleteCmd(args[1:], w, storage)
 	case "export":
 		return exportCmd(args[1:], w, storage)
 	default:
@@ -414,6 +416,13 @@ func updateCmd(args []string, w io.Writer, storage Storage) int {
 
 	_ = w
 	return 0
+}
+
+func deleteCmd(args []string, w io.Writer, storage Storage) int {
+	_ = w
+	_ = storage
+	_ = args
+	return 1
 }
 
 func exportCmd(args []string, w io.Writer, storage Storage) int {

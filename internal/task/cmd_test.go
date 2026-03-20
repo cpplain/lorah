@@ -603,6 +603,93 @@ func TestCreateWithExistingSection(t *testing.T) {
 	}
 }
 
+func TestCreatePhaseDescription(t *testing.T) {
+	store := newMockStorage()
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"create", "--subject=Task", "--phase-name=My Phase", "--phase-description=Phase desc"}, &buf, store)
+	if code != 0 {
+		t.Errorf("expected exit 0, got %d", code)
+	}
+	if len(store.list.Phases) != 1 {
+		t.Fatalf("expected 1 phase created, got %d", len(store.list.Phases))
+	}
+	if store.list.Phases[0].Description != "Phase desc" {
+		t.Errorf("expected phase description 'Phase desc', got %q", store.list.Phases[0].Description)
+	}
+}
+
+func TestCreateSectionDescription(t *testing.T) {
+	store := newMockStorage()
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"create", "--subject=Task", "--phase-name=Phase 1", "--section-name=Section 1.1", "--section-description=Section desc"}, &buf, store)
+	if code != 0 {
+		t.Errorf("expected exit 0, got %d", code)
+	}
+	if len(store.list.Sections) != 1 {
+		t.Fatalf("expected 1 section created, got %d", len(store.list.Sections))
+	}
+	if store.list.Sections[0].Description != "Section desc" {
+		t.Errorf("expected section description 'Section desc', got %q", store.list.Sections[0].Description)
+	}
+}
+
+func TestCreateSectionPhaseIDAssigned(t *testing.T) {
+	store := newMockStorage()
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"create", "--subject=Task", "--phase-name=Phase 1", "--section-name=Section 1.1"}, &buf, store)
+	if code != 0 {
+		t.Errorf("expected exit 0, got %d", code)
+	}
+	if len(store.list.Phases) != 1 {
+		t.Fatalf("expected 1 phase, got %d", len(store.list.Phases))
+	}
+	if len(store.list.Sections) != 1 {
+		t.Fatalf("expected 1 section, got %d", len(store.list.Sections))
+	}
+	// Section must reference the auto-generated phase's ID.
+	if store.list.Sections[0].PhaseID != store.list.Phases[0].ID {
+		t.Errorf("expected section PhaseID %q, got %q", store.list.Phases[0].ID, store.list.Sections[0].PhaseID)
+	}
+}
+
+func TestCreateOutputOrdering(t *testing.T) {
+	store := newMockStorage()
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"create", "--subject=Task", "--phase-name=Phase 1", "--section-name=Section 1.1"}, &buf, store)
+	if code != 0 {
+		t.Errorf("expected exit 0, got %d", code)
+	}
+	out := buf.String()
+	lines := strings.Split(strings.TrimSpace(out), "\n")
+	if len(lines) != 3 {
+		t.Fatalf("expected 3 output lines (phase, section, task), got %d: %q", len(lines), out)
+	}
+	if !strings.HasPrefix(lines[0], "phase ") {
+		t.Errorf("expected first line to start with 'phase ', got %q", lines[0])
+	}
+	if !strings.HasPrefix(lines[1], "section ") {
+		t.Errorf("expected second line to start with 'section ', got %q", lines[1])
+	}
+	if !strings.HasPrefix(lines[2], "task ") {
+		t.Errorf("expected third line to start with 'task ', got %q", lines[2])
+	}
+}
+
+func TestCreateSectionNameWithoutPhaseContext(t *testing.T) {
+	store := newMockStorage()
+
+	var buf bytes.Buffer
+	// --section-name without --phase or --phase-name should return 1
+	code := HandleTask([]string{"create", "--subject=Task", "--section-name=Section 1.1"}, &buf, store)
+	if code != 1 {
+		t.Errorf("expected exit 1 when --section-name used without phase context, got %d", code)
+	}
+}
+
 func TestCreateSectionWithoutPhaseContext(t *testing.T) {
 	store := newMockStorage()
 	store.list.Sections = []Section{{ID: "sect0001", PhaseID: "phase001", Name: "Section 1.1"}}

@@ -716,7 +716,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
 ### Create Auto-Generation
 
-- [pending] Write tests for create auto-generation (cmd.go)
+- [completed] Write tests for create auto-generation (cmd.go)
 
   ```notes
   - Continue in `internal/task/cmd_test.go`
@@ -731,7 +731,10 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Test output ordering: `phase <id>` before `section <id>` before `task <id>` (only newly created entities)
   - Test `--section-name` without phase context (no `--phase` or `--phase-name`): returns 1 with error
 
-  - Create handler already exists (stubs auto-generation); all tests should fail as expected
+  - Several tests already existed from prior iterations (TestCreateWithPhaseName, TestCreateWithPhaseAndSectionName, TestCreateWithProjectNameAndDescription).
+  - Added 5 new tests: TestCreatePhaseDescription, TestCreateSectionDescription, TestCreateSectionPhaseIDAssigned, TestCreateOutputOrdering, TestCreateSectionNameWithoutPhaseContext.
+  - TestCreateSectionNameWithoutPhaseContext FAILS as expected — implementation guards `--section` without phase context but not `--section-name` without phase context.
+  - All other new tests PASS against the existing implementation.
   ```
 
 - [pending] Implement create auto-generation (cmd.go)
@@ -753,6 +756,14 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   **Storage:**
   - Call `storage.Save(list)` to persist phase/section/project metadata before `storage.Create(&task)`
   - Print: `phase <id>` (if new), `section <id>` (if new), `task <id>` (always)
+
+  - NOTE: Most of this is already implemented in createCmd. The only missing piece is that
+    `--section-name` or `--section-description` without any phase context (no `--phase` and
+    no `--phase-name`) currently succeeds instead of returning 1. The fix is a guard in the
+    `else if *sectionName != "" || *sectionDesc != ""` branch: check `phaseID == ""` and
+    return 1 with an error message matching the existing `--section` guard.
+  - All other auto-generation logic (phase creation, section creation, project metadata, output
+    ordering, PhaseID assignment to sections) is already implemented and tested.
 
   - All tests should pass
   ```

@@ -444,7 +444,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
 ### List Flat and JSON Formatters
 
-- [pending] Write tests for list flat and JSON formatters (format.go)
+- [completed] Write tests for list flat and JSON formatters (format.go)
 
   ```notes
   - Continue in `internal/task/format_test.go`
@@ -459,6 +459,9 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Test valid JSON round-trip
 
   - Stubs already exist from previous section; all tests should fail as expected
+  - NOTE: Overzealous prior agent already wrote both TestFormatListMarkdownFlat and
+    TestFormatListJSON tests, and the full implementations. All spec requirements are
+    covered. All tests pass.
   ```
 
 - [pending] Implement list flat and JSON formatters (format.go)

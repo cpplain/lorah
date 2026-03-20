@@ -317,6 +317,57 @@ func TestListLimit(t *testing.T) {
 	}
 }
 
+func TestListSectionFilter(t *testing.T) {
+	store := newMockStorage()
+	now := time.Now()
+	store.list.Tasks = []Task{
+		{ID: "aaaaaa01", Subject: "Section1 task", Status: StatusPending, SectionID: "sect1111", LastUpdated: now},
+		{ID: "aaaaaa02", Subject: "Section2 task", Status: StatusPending, SectionID: "sect2222", LastUpdated: now},
+	}
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"list", "--section=sect1111"}, &buf, store)
+	if code != 0 {
+		t.Errorf("expected exit 0, got %d", code)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "aaaaaa01") {
+		t.Errorf("expected section1 task in output")
+	}
+	if strings.Contains(out, "aaaaaa02") {
+		t.Errorf("expected section2 task to be filtered out")
+	}
+}
+
+func TestListFlatWithJSON(t *testing.T) {
+	store := newMockStorage()
+	now := time.Now()
+	store.list.Tasks = []Task{
+		{ID: "aaaaaa01", Subject: "Task A", Status: StatusPending, LastUpdated: now, Notes: "some notes"},
+	}
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"list", "--flat", "--format=json"}, &buf, store)
+	if code != 0 {
+		t.Errorf("expected exit 0, got %d", code)
+	}
+	out := buf.String()
+	// --flat is ignored when --format=json; output should be JSON envelope
+	if !strings.Contains(out, `"tasks"`) {
+		t.Errorf("expected JSON envelope with tasks key even with --flat, got:\n%s", out)
+	}
+}
+
+func TestListInvalidStatus(t *testing.T) {
+	store := newMockStorage()
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"list", "--status=bogus"}, &buf, store)
+	if code != 1 {
+		t.Errorf("expected exit 1 for invalid status, got %d", code)
+	}
+}
+
 // --- get tests ---
 
 func TestGetByID(t *testing.T) {

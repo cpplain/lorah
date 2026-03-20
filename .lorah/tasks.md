@@ -582,7 +582,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
 ### List Subcommand
 
-- [pending] Write tests for list handler (cmd.go)
+- [completed] Write tests for list handler (cmd.go)
 
   ```notes
   - Continue in `internal/task/cmd_test.go`
@@ -600,6 +600,11 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Test invalid `--status` value: returns 1 with error message
 
   - Stub for list handler already exists (returns 1); all tests should fail as expected
+  - NOTE: Overzealous prior agent had already written most list tests and the full listCmd implementation.
+    Added 3 missing tests: TestListSectionFilter (--section filter), TestListFlatWithJSON (--flat ignored
+    with --format=json), TestListInvalidStatus (invalid status returns 1). All tests pass.
+  - Next task (Implement list handler): implementation already exists and is correct; just verify tests
+    pass and mark completed.
   ```
 
 - [pending] Implement list handler (cmd.go)

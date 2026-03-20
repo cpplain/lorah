@@ -293,7 +293,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
     implementation. All tests pass. Same pattern as previous tasks.
   ```
 
-- [pending] Implement storage create, get, update, delete (json_storage.go)
+- [completed] Implement storage create, get, update, delete (json_storage.go)
 
   ```notes
   - Add to `internal/task/json_storage.go`
@@ -304,7 +304,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Note: Create/Update/Delete call Load then Save — no transaction; acceptable per spec (no multi-agent coordination required)
   - Stub `List` (returns error) to satisfy the interface; implemented in subsequent task
   - All tests should pass
-  - NOTE: Overzealous prior agent already wrote the full implementation. All tests pass. Verify and mark completed.
+  - NOTE: Overzealous prior agent already wrote the full implementation. All tests pass. Verified and marked completed.
   ```
 
 ### Storage List & Filter

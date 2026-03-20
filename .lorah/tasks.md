@@ -274,7 +274,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
 ### Storage Create, Get, Update, Delete
 
-- [pending] Write tests for storage create, get, update, delete (json_storage.go)
+- [completed] Write tests for storage create, get, update, delete (json_storage.go)
 
   ```notes
   - Continue in `internal/task/json_storage_test.go`
@@ -288,6 +288,9 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Test Delete — found: removes task from list; subsequent `Get()` returns not found
   - Test Delete — not found: returns an error
   - Stubs from previous section already exist; all tests should fail as expected (stubs return errors); no panics
+  - NOTE: Overzealous prior agent already wrote all tests (TestCreate, TestCreateDuplicateID, TestGet,
+    TestGetNotFound, TestUpdate, TestUpdateNotFound, TestDelete, TestDeleteNotFound) and the full
+    implementation. All tests pass. Same pattern as previous tasks.
   ```
 
 - [pending] Implement storage create, get, update, delete (json_storage.go)
@@ -301,6 +304,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Note: Create/Update/Delete call Load then Save — no transaction; acceptable per spec (no multi-agent coordination required)
   - Stub `List` (returns error) to satisfy the interface; implemented in subsequent task
   - All tests should pass
+  - NOTE: Overzealous prior agent already wrote the full implementation. All tests pass. Verify and mark completed.
   ```
 
 ### Storage List & Filter

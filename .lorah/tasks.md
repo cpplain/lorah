@@ -193,7 +193,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
 ### Core Types
 
-- [pending] Write tests for core types (task.go)
+- [completed] Write tests for core types (task.go)
 
   ```notes
   - Test in `internal/task/task_test.go`
@@ -207,6 +207,11 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Test generateID() uniqueness: call multiple times, verify all results are distinct
   - Add minimal type stubs in `internal/task/task.go` for compilation (types with zero-value fields, `generateID()` returning `""`)
   - Expect: type/serialization tests pass against stubs (correct JSON tags); generateID tests fail (stub returns `""`)
+  - NOTE: Overzealous prior agent committed full implementations for all Phase 4 files. Added missing
+    TestPhaseJSONOmitEmpty and TestSectionJSONOmitEmpty tests; all other tests already existed. The
+    full task.go implementation (not stubs) was already present and correct per spec — all tests pass.
+  - Next task (Implement core types): implementation already exists and is correct; just verify tests
+    pass and mark completed.
   ```
 
 - [pending] Implement core types (task.go)

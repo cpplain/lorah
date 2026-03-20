@@ -24,6 +24,62 @@ func TestTaskStatusConstants(t *testing.T) {
 	}
 }
 
+// TestPhaseJSONOmitEmpty verifies that optional Phase fields are absent from JSON when empty.
+func TestPhaseJSONOmitEmpty(t *testing.T) {
+	phase := Phase{ID: "d4e5f6a7"}
+
+	data, err := json.Marshal(phase)
+	if err != nil {
+		t.Fatalf("json.Marshal: %v", err)
+	}
+
+	var m map[string]any
+	if err := json.Unmarshal(data, &m); err != nil {
+		t.Fatalf("json.Unmarshal: %v", err)
+	}
+
+	// ID must always be present.
+	if _, ok := m["id"]; !ok {
+		t.Errorf("expected key %q in JSON, but missing", "id")
+	}
+
+	// Optional fields must be absent when empty.
+	for _, key := range []string{"name", "description"} {
+		if _, ok := m[key]; ok {
+			t.Errorf("unexpected key %q in JSON when field is empty", key)
+		}
+	}
+}
+
+// TestSectionJSONOmitEmpty verifies that optional Section fields are absent from JSON when empty.
+func TestSectionJSONOmitEmpty(t *testing.T) {
+	section := Section{ID: "b8c9d0e1", PhaseID: "d4e5f6a7"}
+
+	data, err := json.Marshal(section)
+	if err != nil {
+		t.Fatalf("json.Marshal: %v", err)
+	}
+
+	var m map[string]any
+	if err := json.Unmarshal(data, &m); err != nil {
+		t.Fatalf("json.Unmarshal: %v", err)
+	}
+
+	// ID and PhaseID must always be present.
+	for _, key := range []string{"id", "phaseId"} {
+		if _, ok := m[key]; !ok {
+			t.Errorf("expected key %q in JSON, but missing", key)
+		}
+	}
+
+	// Optional fields must be absent when empty.
+	for _, key := range []string{"name", "description"} {
+		if _, ok := m[key]; ok {
+			t.Errorf("unexpected key %q in JSON when field is empty", key)
+		}
+	}
+}
+
 // TestTaskJSONOmitEmpty verifies that optional Task fields are absent from JSON when empty.
 func TestTaskJSONOmitEmpty(t *testing.T) {
 	task := Task{

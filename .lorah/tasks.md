@@ -484,7 +484,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
 ### Export Formatter
 
-- [pending] Write tests for export formatter (format.go)
+- [completed] Write tests for export formatter (format.go)
 
   ```notes
   - Continue in `internal/task/format_test.go`
@@ -501,6 +501,11 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
   - Add stub `FormatExportMarkdown` to `internal/task/format.go` for compilation
   - All tests should fail as expected
+  - NOTE: Overzealous prior agent already wrote most tests and the full FormatExportMarkdown
+    implementation. Added two missing subtests: "section description renders below section heading"
+    (FAILS — renderGrouped does not render section descriptions when includePhaseDesc=true; the
+    implementation task must fix this) and "no description paragraph when description is empty"
+    (PASSES — implementation correctly skips empty phase descriptions and never adds placeholders).
   ```
 
 - [pending] Implement export formatter (format.go)
@@ -514,6 +519,11 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - If `list.Description` is set AND name is set, render as paragraph after H1 followed by blank line
   - If name is not set: skip both (no H1, no description)
   - Call shared grouping helper (from list grouped formatter) with includeDescriptions=true to render phase/section descriptions
+
+  - IMPLEMENTATION GAP: `renderGrouped` currently only renders phase descriptions when
+    `includePhaseDesc=true`. It does NOT render section descriptions. Must add section description
+    rendering: after the `### {section heading}` line, if `includePhaseDesc && sec.Description != ""`
+    render `sec.Description\n\n`. This is needed to make the new test pass.
 
   - All tests should pass
   ```

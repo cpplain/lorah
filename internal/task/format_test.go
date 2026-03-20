@@ -456,4 +456,48 @@ func TestFormatExportMarkdown(t *testing.T) {
 			t.Errorf("expected '## (none)' heading for tasks without phase, got:\n%s", got)
 		}
 	})
+
+	t.Run("section description renders below section heading", func(t *testing.T) {
+		listWithSectionDesc := &TaskList{
+			Name: "My Project",
+			Phases: []Phase{
+				{ID: "d4e5f6a7", Name: "Phase 1: Run Loop"},
+			},
+			Sections: []Section{
+				{ID: "b8c9d0e1", PhaseID: "d4e5f6a7", Name: "1.1 Output Formatting", Description: "Handles stream-JSON parsing."},
+			},
+		}
+		got := FormatExportMarkdown(tasks, listWithSectionDesc)
+		if !strings.Contains(got, "### 1.1 Output Formatting") {
+			t.Errorf("expected section heading, got:\n%s", got)
+		}
+		if !strings.Contains(got, "Handles stream-JSON parsing.") {
+			t.Errorf("expected section description in export output, got:\n%s", got)
+		}
+	})
+
+	t.Run("no description paragraph when description is empty", func(t *testing.T) {
+		listNoDesc := &TaskList{
+			Name: "My Project",
+			Phases: []Phase{
+				{ID: "d4e5f6a7", Name: "Phase 1: Run Loop"}, // no description
+			},
+			Sections: []Section{
+				{ID: "b8c9d0e1", PhaseID: "d4e5f6a7", Name: "1.1 Output Formatting"}, // no description
+			},
+		}
+		got := FormatExportMarkdown(tasks, listNoDesc)
+		// Phase heading must be present
+		if !strings.Contains(got, "## Phase 1: Run Loop") {
+			t.Errorf("expected phase heading, got:\n%s", got)
+		}
+		// No "(none)" placeholder for missing descriptions
+		if strings.Contains(got, "(none)") {
+			t.Errorf("expected no placeholder text for empty descriptions, got:\n%s", got)
+		}
+		// No consecutive blank lines beyond heading separators (no extra blank line from missing description)
+		if strings.Contains(got, "\n\n\n") {
+			t.Errorf("unexpected triple newline (extra blank line) from empty description, got:\n%q", got)
+		}
+	})
 }

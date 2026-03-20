@@ -814,7 +814,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
 ### Update Metadata
 
-- [pending] Write tests for update metadata (cmd.go)
+- [completed] Write tests for update metadata (cmd.go)
 
   ```notes
   - Continue in `internal/task/cmd_test.go`
@@ -834,6 +834,15 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Test `--section-description` without `--section`: returns 1 with error
 
   - Stubs from previous section already exist; all tests should fail as expected
+  - Added 12 tests: TestUpdatePhaseReassigns, TestUpdatePhaseNameUpserts, TestUpdatePhaseDescriptionUpserts,
+    TestUpdateSectionReassigns, TestUpdateSectionNameUpserts, TestUpdateSectionDescriptionUpserts,
+    TestUpdateProjectMetadata (all PASS), and TestUpdatePhaseNameRequiresPhase,
+    TestUpdatePhaseDescriptionRequiresPhase, TestUpdateSectionRequiresPhase,
+    TestUpdateSectionNameRequiresSection, TestUpdateSectionDescriptionRequiresSection (all FAIL — impl
+    silently skips instead of returning 1).
+  - Next task (Implement update metadata): must add validation guards before the metadata upsert logic
+    in updateCmd so that --phase-name/--phase-description without --phase, --section without --phase,
+    and --section-name/--section-description without --section all return 1 with an error message.
   ```
 
 - [pending] Implement update metadata (cmd.go)

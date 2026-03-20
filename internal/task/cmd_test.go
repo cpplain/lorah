@@ -849,6 +849,217 @@ func TestUpdateSubjectClear(t *testing.T) {
 	}
 }
 
+// --- update metadata tests ---
+
+func TestUpdatePhaseReassigns(t *testing.T) {
+	store := newMockStorage()
+	now := time.Now()
+	task := &Task{ID: "upd00010", Subject: "Task", Status: StatusPending, LastUpdated: now}
+	store.tasks["upd00010"] = task
+	store.list.Tasks = []Task{*task}
+	store.list.Phases = []Phase{{ID: "phase001", Name: "Phase 1"}}
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"update", "upd00010", "--phase=phase001"}, &buf, store)
+	if code != 0 {
+		t.Errorf("expected exit 0, got %d", code)
+	}
+	if store.tasks["upd00010"].PhaseID != "phase001" {
+		t.Errorf("expected phaseID 'phase001', got %q", store.tasks["upd00010"].PhaseID)
+	}
+}
+
+func TestUpdatePhaseNameUpserts(t *testing.T) {
+	store := newMockStorage()
+	now := time.Now()
+	task := &Task{ID: "upd00011", Subject: "Task", Status: StatusPending, PhaseID: "phase001", LastUpdated: now}
+	store.tasks["upd00011"] = task
+	store.list.Tasks = []Task{*task}
+	store.list.Phases = []Phase{{ID: "phase001", Name: "Old Name"}}
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"update", "upd00011", "--phase=phase001", "--phase-name=New Name"}, &buf, store)
+	if code != 0 {
+		t.Errorf("expected exit 0, got %d", code)
+	}
+	if store.list.Phases[0].Name != "New Name" {
+		t.Errorf("expected phase name 'New Name', got %q", store.list.Phases[0].Name)
+	}
+}
+
+func TestUpdatePhaseDescriptionUpserts(t *testing.T) {
+	store := newMockStorage()
+	now := time.Now()
+	task := &Task{ID: "upd00012", Subject: "Task", Status: StatusPending, PhaseID: "phase001", LastUpdated: now}
+	store.tasks["upd00012"] = task
+	store.list.Tasks = []Task{*task}
+	store.list.Phases = []Phase{{ID: "phase001", Name: "Phase 1"}}
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"update", "upd00012", "--phase=phase001", "--phase-description=Phase desc"}, &buf, store)
+	if code != 0 {
+		t.Errorf("expected exit 0, got %d", code)
+	}
+	if store.list.Phases[0].Description != "Phase desc" {
+		t.Errorf("expected phase description 'Phase desc', got %q", store.list.Phases[0].Description)
+	}
+}
+
+func TestUpdateSectionReassigns(t *testing.T) {
+	store := newMockStorage()
+	now := time.Now()
+	task := &Task{ID: "upd00013", Subject: "Task", Status: StatusPending, PhaseID: "phase001", LastUpdated: now}
+	store.tasks["upd00013"] = task
+	store.list.Tasks = []Task{*task}
+	store.list.Phases = []Phase{{ID: "phase001", Name: "Phase 1"}}
+	store.list.Sections = []Section{{ID: "sect0001", PhaseID: "phase001", Name: "Section 1"}}
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"update", "upd00013", "--phase=phase001", "--section=sect0001"}, &buf, store)
+	if code != 0 {
+		t.Errorf("expected exit 0, got %d", code)
+	}
+	if store.tasks["upd00013"].SectionID != "sect0001" {
+		t.Errorf("expected sectionID 'sect0001', got %q", store.tasks["upd00013"].SectionID)
+	}
+}
+
+func TestUpdateSectionNameUpserts(t *testing.T) {
+	store := newMockStorage()
+	now := time.Now()
+	task := &Task{ID: "upd00014", Subject: "Task", Status: StatusPending, PhaseID: "phase001", SectionID: "sect0001", LastUpdated: now}
+	store.tasks["upd00014"] = task
+	store.list.Tasks = []Task{*task}
+	store.list.Phases = []Phase{{ID: "phase001", Name: "Phase 1"}}
+	store.list.Sections = []Section{{ID: "sect0001", PhaseID: "phase001", Name: "Old Section"}}
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"update", "upd00014", "--phase=phase001", "--section=sect0001", "--section-name=New Section"}, &buf, store)
+	if code != 0 {
+		t.Errorf("expected exit 0, got %d", code)
+	}
+	if store.list.Sections[0].Name != "New Section" {
+		t.Errorf("expected section name 'New Section', got %q", store.list.Sections[0].Name)
+	}
+}
+
+func TestUpdateSectionDescriptionUpserts(t *testing.T) {
+	store := newMockStorage()
+	now := time.Now()
+	task := &Task{ID: "upd00015", Subject: "Task", Status: StatusPending, PhaseID: "phase001", SectionID: "sect0001", LastUpdated: now}
+	store.tasks["upd00015"] = task
+	store.list.Tasks = []Task{*task}
+	store.list.Phases = []Phase{{ID: "phase001", Name: "Phase 1"}}
+	store.list.Sections = []Section{{ID: "sect0001", PhaseID: "phase001", Name: "Section 1"}}
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"update", "upd00015", "--phase=phase001", "--section=sect0001", "--section-description=Section desc"}, &buf, store)
+	if code != 0 {
+		t.Errorf("expected exit 0, got %d", code)
+	}
+	if store.list.Sections[0].Description != "Section desc" {
+		t.Errorf("expected section description 'Section desc', got %q", store.list.Sections[0].Description)
+	}
+}
+
+func TestUpdateProjectMetadata(t *testing.T) {
+	store := newMockStorage()
+	now := time.Now()
+	task := &Task{ID: "upd00016", Subject: "Task", Status: StatusPending, LastUpdated: now}
+	store.tasks["upd00016"] = task
+	store.list.Tasks = []Task{*task}
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"update", "upd00016", "--project-name=My Project", "--project-description=A description"}, &buf, store)
+	if code != 0 {
+		t.Errorf("expected exit 0, got %d", code)
+	}
+	if store.list.Name != "My Project" {
+		t.Errorf("expected project name 'My Project', got %q", store.list.Name)
+	}
+	if store.list.Description != "A description" {
+		t.Errorf("expected project description 'A description', got %q", store.list.Description)
+	}
+}
+
+func TestUpdatePhaseNameRequiresPhase(t *testing.T) {
+	store := newMockStorage()
+	now := time.Now()
+	task := &Task{ID: "upd00017", Subject: "Task", Status: StatusPending, LastUpdated: now}
+	store.tasks["upd00017"] = task
+	store.list.Tasks = []Task{*task}
+
+	var buf bytes.Buffer
+	// --phase-name without --phase should return 1
+	code := HandleTask([]string{"update", "upd00017", "--phase-name=Some Phase"}, &buf, store)
+	if code != 1 {
+		t.Errorf("expected exit 1 when --phase-name used without --phase, got %d", code)
+	}
+}
+
+func TestUpdatePhaseDescriptionRequiresPhase(t *testing.T) {
+	store := newMockStorage()
+	now := time.Now()
+	task := &Task{ID: "upd00018", Subject: "Task", Status: StatusPending, LastUpdated: now}
+	store.tasks["upd00018"] = task
+	store.list.Tasks = []Task{*task}
+
+	var buf bytes.Buffer
+	// --phase-description without --phase should return 1
+	code := HandleTask([]string{"update", "upd00018", "--phase-description=Some desc"}, &buf, store)
+	if code != 1 {
+		t.Errorf("expected exit 1 when --phase-description used without --phase, got %d", code)
+	}
+}
+
+func TestUpdateSectionRequiresPhase(t *testing.T) {
+	store := newMockStorage()
+	now := time.Now()
+	task := &Task{ID: "upd00019", Subject: "Task", Status: StatusPending, LastUpdated: now}
+	store.tasks["upd00019"] = task
+	store.list.Tasks = []Task{*task}
+	store.list.Sections = []Section{{ID: "sect0001", PhaseID: "phase001", Name: "Section 1"}}
+
+	var buf bytes.Buffer
+	// --section without --phase should return 1
+	code := HandleTask([]string{"update", "upd00019", "--section=sect0001"}, &buf, store)
+	if code != 1 {
+		t.Errorf("expected exit 1 when --section used without --phase, got %d", code)
+	}
+}
+
+func TestUpdateSectionNameRequiresSection(t *testing.T) {
+	store := newMockStorage()
+	now := time.Now()
+	task := &Task{ID: "upd00020", Subject: "Task", Status: StatusPending, PhaseID: "phase001", LastUpdated: now}
+	store.tasks["upd00020"] = task
+	store.list.Tasks = []Task{*task}
+	store.list.Phases = []Phase{{ID: "phase001", Name: "Phase 1"}}
+
+	var buf bytes.Buffer
+	// --section-name without --section should return 1
+	code := HandleTask([]string{"update", "upd00020", "--phase=phase001", "--section-name=Some Section"}, &buf, store)
+	if code != 1 {
+		t.Errorf("expected exit 1 when --section-name used without --section, got %d", code)
+	}
+}
+
+func TestUpdateSectionDescriptionRequiresSection(t *testing.T) {
+	store := newMockStorage()
+	now := time.Now()
+	task := &Task{ID: "upd00021", Subject: "Task", Status: StatusPending, PhaseID: "phase001", LastUpdated: now}
+	store.tasks["upd00021"] = task
+	store.list.Tasks = []Task{*task}
+	store.list.Phases = []Phase{{ID: "phase001", Name: "Phase 1"}}
+
+	var buf bytes.Buffer
+	// --section-description without --section should return 1
+	code := HandleTask([]string{"update", "upd00021", "--phase=phase001", "--section-description=Some desc"}, &buf, store)
+	if code != 1 {
+		t.Errorf("expected exit 1 when --section-description used without --section, got %d", code)
+	}
+}
+
 // --- delete tests ---
 
 func TestDeleteByID(t *testing.T) {

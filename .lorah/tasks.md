@@ -648,7 +648,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
     just verify tests pass and mark completed.
   ```
 
-- [pending] Implement get handler (cmd.go)
+- [completed] Implement get handler (cmd.go)
 
   ```notes
   - Add to `internal/task/cmd.go`
@@ -662,6 +662,8 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Write to `w`; return 0
 
   - All tests should pass
+  - NOTE: Implementation was already present from the overzealous prior agent in cmd.go. Verified all
+    tests pass; marked completed.
   ```
 
 ### Create Subcommand

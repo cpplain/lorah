@@ -737,7 +737,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - All other new tests PASS against the existing implementation.
   ```
 
-- [pending] Implement create auto-generation (cmd.go)
+- [completed] Implement create auto-generation (cmd.go)
 
   ```notes
   - Add to the create handler in `internal/task/cmd.go`
@@ -757,15 +757,10 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Call `storage.Save(list)` to persist phase/section/project metadata before `storage.Create(&task)`
   - Print: `phase <id>` (if new), `section <id>` (if new), `task <id>` (always)
 
-  - NOTE: Most of this is already implemented in createCmd. The only missing piece is that
-    `--section-name` or `--section-description` without any phase context (no `--phase` and
-    no `--phase-name`) currently succeeds instead of returning 1. The fix is a guard in the
-    `else if *sectionName != "" || *sectionDesc != ""` branch: check `phaseID == ""` and
-    return 1 with an error message matching the existing `--section` guard.
-  - All other auto-generation logic (phase creation, section creation, project metadata, output
-    ordering, PhaseID assignment to sections) is already implemented and tested.
-
-  - All tests should pass
+  - Added guard in `else if *sectionName != "" || *sectionDesc != ""` branch: checks `phaseID == ""`
+    and returns 1 with error "—section-name requires a phase context (--phase or --phase-name)".
+  - All other auto-generation logic was already implemented by prior overzealous agent.
+  - All tests pass.
   ```
 
 ### Update Basic Fields

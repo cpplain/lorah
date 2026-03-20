@@ -256,6 +256,10 @@ func createCmd(args []string, w io.Writer, storage Storage) int {
 			}
 		}
 	} else if *sectionName != "" || *sectionDesc != "" {
+		if phaseID == "" {
+			fmt.Fprintln(os.Stderr, "--section-name requires a phase context (--phase or --phase-name)")
+			return 1
+		}
 		newSectionID = generateID()
 		sectionID = newSectionID
 		s := Section{ID: newSectionID, PhaseID: phaseID}

@@ -327,12 +327,13 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Full List implementation was already present; all tests pass.
   ```
 
-- [pending] Implement storage list and filter (json_storage.go)
+- [completed] Implement storage list and filter (json_storage.go)
 
   ```notes
   - Add to `internal/task/json_storage.go`
   - List: call Load; iterate tasks; apply filters (AND-combined): status matches any in `filter.Status` (OR within the status list); PhaseID exact match; SectionID exact match; empty filter fields are ignored; apply Limit after filtering (0 = no limit)
   - All tests should pass
+  - Prior overzealous agent had already written the full List implementation. Verified all tests pass and marked completed.
   ```
 
 ### Single-Task Formatters

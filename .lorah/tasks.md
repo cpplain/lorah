@@ -867,7 +867,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
 ### Delete Subcommand
 
-- [pending] Write tests for delete handler (cmd.go)
+- [completed] Write tests for delete handler (cmd.go)
 
   ```notes
   - Continue in `internal/task/cmd_test.go`
@@ -878,6 +878,10 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Test no ID argument: returns 1 with usage
 
   - Stub for delete handler already exists (returns 1); all tests should fail as expected
+  - NOTE: Overzealous prior agent already wrote all 3 delete tests (TestDeleteByID,
+    TestDeleteCmdNotFound, TestDeleteMissingID) and the full deleteCmd implementation.
+    All tests pass. Next task (Implement delete handler): implementation already exists
+    and is correct; just verify tests pass and mark completed.
   ```
 
 - [pending] Implement delete handler (cmd.go)

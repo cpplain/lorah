@@ -508,7 +508,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
     (PASSES — implementation correctly skips empty phase descriptions and never adds placeholders).
   ```
 
-- [pending] Implement export formatter (format.go)
+- [completed] Implement export formatter (format.go)
 
   ```notes
   - Add to `internal/task/format.go`
@@ -520,12 +520,10 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - If name is not set: skip both (no H1, no description)
   - Call shared grouping helper (from list grouped formatter) with includeDescriptions=true to render phase/section descriptions
 
-  - IMPLEMENTATION GAP: `renderGrouped` currently only renders phase descriptions when
-    `includePhaseDesc=true`. It does NOT render section descriptions. Must add section description
-    rendering: after the `### {section heading}` line, if `includePhaseDesc && sec.Description != ""`
-    render `sec.Description\n\n`. This is needed to make the new test pass.
-
-  - All tests should pass
+  - Fixed: added section description rendering in `renderGrouped` after `### {section heading}` line
+    when `includePhaseDesc && sec.Description != ""`. The prior overzealous agent had only implemented
+    phase description rendering. One-line fix in `renderGrouped` in `format.go`.
+  - All tests pass.
   ```
 
 ### Dispatch

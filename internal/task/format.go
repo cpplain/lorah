@@ -186,6 +186,9 @@ func renderGrouped(tasks []Task, list *TaskList, includePhaseDesc bool) string {
 				continue
 			}
 			fmt.Fprintf(&sb, "### %s\n\n", resolveSectionName(sec.ID, list))
+			if includePhaseDesc && sec.Description != "" {
+				fmt.Fprintf(&sb, "%s\n\n", sec.Description)
+			}
 			for _, t := range secTasks {
 				sb.WriteString(taskBullet(t))
 				sb.WriteString("\n")

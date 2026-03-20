@@ -925,7 +925,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
     just verify tests pass and mark completed.
   ```
 
-- [pending] Implement export handler (cmd.go)
+- [completed] Implement export handler (cmd.go)
 
   ```notes
   - Add to `internal/task/cmd.go`
@@ -939,6 +939,9 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Return 0
 
   - All tests should pass
+  - NOTE: Prior overzealous agent already wrote the full exportCmd implementation in cmd.go.
+    Implementation correctly handles --status (repeatable with multiFlag), --output (file path),
+    FormatExportMarkdown, and stdout fallback. All 5 export tests pass. Verified and marked completed.
   ```
 
 ### Wire-Up

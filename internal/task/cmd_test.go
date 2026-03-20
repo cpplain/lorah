@@ -1166,3 +1166,63 @@ func TestExportToFile(t *testing.T) {
 		t.Errorf("expected nothing written to stdout when --output given, got:\n%s", buf.String())
 	}
 }
+
+func TestExportStatusRepeatable(t *testing.T) {
+	store := newMockStorage()
+	now := time.Now()
+	store.list.Tasks = []Task{
+		{ID: "exp00001", Subject: "Pending task", Status: StatusPending, LastUpdated: now},
+		{ID: "exp00002", Subject: "In progress task", Status: StatusInProgress, LastUpdated: now},
+		{ID: "exp00003", Subject: "Completed task", Status: StatusCompleted, LastUpdated: now},
+	}
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"export", "--status=pending", "--status=in_progress"}, &buf, store)
+	if code != 0 {
+		t.Errorf("expected exit 0, got %d", code)
+	}
+	out := buf.String()
+	if !strings.Contains(out, "exp00001") {
+		t.Errorf("expected pending task in export")
+	}
+	if !strings.Contains(out, "exp00002") {
+		t.Errorf("expected in_progress task in export")
+	}
+	if strings.Contains(out, "exp00003") {
+		t.Errorf("expected completed task to be filtered out")
+	}
+}
+
+func TestExportPhaseAndSectionDescriptions(t *testing.T) {
+	store := newMockStorage()
+	now := time.Now()
+	store.list.Name = "Export Project"
+	store.list.Phases = []Phase{
+		{ID: "ph000001", Name: "Phase One", Description: "Phase one goals"},
+	}
+	store.list.Sections = []Section{
+		{ID: "sec00001", PhaseID: "ph000001", Name: "Section One", Description: "Section one context"},
+	}
+	store.list.Tasks = []Task{
+		{ID: "exp00001", Subject: "Task in section", Status: StatusPending, PhaseID: "ph000001", SectionID: "sec00001", LastUpdated: now},
+	}
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"export"}, &buf, store)
+	if code != 0 {
+		t.Errorf("expected exit 0, got %d", code)
+	}
+	out := buf.String()
+	// Project H1
+	if !strings.Contains(out, "# Export Project") {
+		t.Errorf("expected project H1 in export output, got:\n%s", out)
+	}
+	// Phase description
+	if !strings.Contains(out, "Phase one goals") {
+		t.Errorf("expected phase description in export output, got:\n%s", out)
+	}
+	// Section description
+	if !strings.Contains(out, "Section one context") {
+		t.Errorf("expected section description in export output, got:\n%s", out)
+	}
+}

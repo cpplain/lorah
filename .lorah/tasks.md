@@ -903,7 +903,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
 ### Export Subcommand
 
-- [pending] Write tests for export handler (cmd.go)
+- [completed] Write tests for export handler (cmd.go)
 
   ```notes
   - Continue in `internal/task/cmd_test.go`
@@ -916,6 +916,13 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Test output is export markdown format (includes project H1 if name is set, phase/section descriptions)
 
   - Stub for export handler already exists (returns 1); all tests should fail as expected
+  - NOTE: Overzealous prior agent had already written TestExportBasic, TestExportStatusFilter,
+    TestExportToFile and the full exportCmd implementation. Added 2 missing tests:
+    TestExportStatusRepeatable (--status repeatable with OR semantics) and
+    TestExportPhaseAndSectionDescriptions (verifies project H1, phase descriptions, section
+    descriptions in export output). All tests pass.
+  - Next task (Implement export handler): implementation already exists and is correct;
+    just verify tests pass and mark completed.
   ```
 
 - [pending] Implement export handler (cmd.go)

@@ -250,7 +250,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
     All tests pass.
   ```
 
-- [pending] Implement storage core (storage.go + json_storage.go)
+- [completed] Implement storage core (storage.go + json_storage.go)
 
   ```notes
   - Create `internal/task/storage.go` with Storage interface:
@@ -269,7 +269,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Stub remaining methods (Get/List/Create/Update/Delete return errors) to satisfy the interface
   - All tests should pass
   - NOTE: Prior overzealous agent already implemented everything in storage.go and json_storage.go
-    including full CRUD and List. Verify all tests pass, mark completed.
+    including full CRUD and List. Verified all tests pass, marked completed.
   ```
 
 ### Storage Create, Get, Update, Delete

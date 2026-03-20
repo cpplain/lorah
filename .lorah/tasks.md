@@ -214,7 +214,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
     pass and mark completed.
   ```
 
-- [pending] Implement core types (task.go)
+- [completed] Implement core types (task.go)
 
   ```notes
   - Create `internal/task/task.go`
@@ -226,6 +226,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Filter struct: `Status []TaskStatus`, `PhaseID string`, `SectionID string`, `Limit int` — used by Storage.List, not serialized to JSON
   - generateID(): use `crypto/rand.Read(4 bytes)` → `hex.EncodeToString` → 8-char lowercase hex string
   - All tests should pass
+  - Implementation was already present from prior overzealous agent; verified all tests pass against spec.
   ```
 
 ### Storage Core

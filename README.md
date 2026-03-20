@@ -22,20 +22,22 @@ But you get raw `stream-json` output that's unreadable:
 **Lorah gives you clean, color-coded output:**
 
 ```
-==> Claude
+⏺ Claude
 Let me read the file
-==> Read
+
+⏺ Read
 /path/to/file
 ```
 
-Plus automatic error recovery, graceful shutdown, and full Claude CLI compatibility.
+Plus automatic error recovery, graceful shutdown, and full Claude Code CLI compatibility.
 
 **Key Features:**
 
 - **Formatted output** - Color-coded sections and tool activity (the main reason Lorah exists)
 - **Simple infinite loop** - Runs continuously until you stop it
 - **Automatic error recovery** - Retries on failures with 5-second delay
-- **Flag passthrough** - All Claude CLI flags work transparently
+- **Flag passthrough** - All Claude Code CLI flags work transparently
+- **Task management** - Structured task tracking for agent workflow coordination
 
 ## Prerequisites
 
@@ -49,22 +51,30 @@ brew install cpplain/tap/lorah
 
 ## Usage
 
-Lorah is an implementatioin of the Ralph loop. You must understand the Ralph technique to use Lorah effectively.
+Lorah is an implementation of the Ralph loop. You must understand the Ralph technique to use Lorah effectively.
 
 Learn more about the Ralph technique: [Ralph Wiggum as a "software engineer"](https://ghuntley.com/ralph/) by Geoffrey Huntley
 
 **Syntax:**
 
 ```bash
-lorah <prompt-file> [claude-flags...]
+lorah <command> [arguments]
 ```
 
-**Examples:**
+**Run loop:**
 
 ```bash
-lorah PROMPT.md
-lorah PROMPT.md --settings .lorah/settings.json
-lorah PROMPT.md --model claude-opus-4-6 --max-turns 50
+lorah run PROMPT.md
+lorah run PROMPT.md --settings .lorah/settings.json
+lorah run PROMPT.md --model claude-opus-4-6 --max-turns 50
+```
+
+**Task management:**
+
+```bash
+lorah task list --status=pending
+lorah task create --subject="Fix auth bug" --priority=3
+lorah task stats
 ```
 
 ## License

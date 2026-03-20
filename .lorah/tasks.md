@@ -414,7 +414,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - NOTE: Overzealous prior agent already wrote TestFormatListMarkdown (2 subtests), TestFormatListMarkdownFlat, TestFormatListJSON, TestFormatExportMarkdown, and full implementations. Added 6 missing subtests to TestFormatListMarkdown: phase name hex fallback, section name hex fallback, tasks with no phase under (none), tasks without section directly under phase heading, tasks without notes as bare bullets, and ordering by phase/section position. All tests pass.
   ```
 
-- [pending] Implement list grouped formatter (format.go)
+- [completed] Implement list grouped formatter (format.go)
 
   ```notes
   - Add to `internal/task/format.go`
@@ -437,6 +437,9 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - When flat=false: call shared grouping helper with includeDescriptions=false (no project H1, no phase/section descriptions)
 
   - All tests should pass
+  - NOTE: Implementation was already present from overzealous prior agent in `internal/task/format.go`.
+    Full `renderGrouped` helper, `renderFlatList`, `FormatListMarkdown`, `FormatListJSON`,
+    `FormatExportMarkdown` all implemented and passing all tests. Verified and marked completed.
   ```
 
 ### List Flat and JSON Formatters

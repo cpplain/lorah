@@ -884,7 +884,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
     and is correct; just verify tests pass and mark completed.
   ```
 
-- [pending] Implement delete handler (cmd.go)
+- [completed] Implement delete handler (cmd.go)
 
   ```notes
   - Add to `internal/task/cmd.go`
@@ -896,6 +896,9 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Return 0
 
   - All tests should pass
+  - NOTE: Prior overzealous agent already wrote full deleteCmd implementation in cmd.go. Verified
+    all 5 delete tests pass (TestDeleteByID, TestDeleteCmdNotFound, TestDeleteMissingID,
+    TestDelete, TestDeleteNotFound). Marked completed.
   ```
 
 ### Export Subcommand

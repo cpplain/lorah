@@ -31,8 +31,11 @@ func TestLoadNonExistent(t *testing.T) {
 func TestLoadExistingFile(t *testing.T) {
 	s := newJSONStorage(t)
 	original := &TaskList{
-		Name:    "Test Project",
-		Version: "1.0",
+		Name:        "Test Project",
+		Description: "Project description",
+		Version:     "1.0",
+		Phases:      []Phase{{ID: "phid0001", Name: "Phase 1", Description: "Phase desc"}},
+		Sections:    []Section{{ID: "sect0001", PhaseID: "phid0001", Name: "Section 1"}},
 		Tasks: []Task{
 			{ID: "a1b2c3d4", Subject: "first task", Status: StatusPending, LastUpdated: time.Now().UTC().Truncate(time.Second)},
 		},
@@ -47,6 +50,21 @@ func TestLoadExistingFile(t *testing.T) {
 	}
 	if list.Name != "Test Project" {
 		t.Errorf("expected Name %q, got %q", "Test Project", list.Name)
+	}
+	if list.Description != "Project description" {
+		t.Errorf("expected Description %q, got %q", "Project description", list.Description)
+	}
+	if list.Version != "1.0" {
+		t.Errorf("expected Version %q, got %q", "1.0", list.Version)
+	}
+	if list.LastUpdated.IsZero() {
+		t.Error("expected LastUpdated to be set, got zero")
+	}
+	if len(list.Phases) != 1 || list.Phases[0].ID != "phid0001" || list.Phases[0].Name != "Phase 1" || list.Phases[0].Description != "Phase desc" {
+		t.Errorf("unexpected Phases: %v", list.Phases)
+	}
+	if len(list.Sections) != 1 || list.Sections[0].ID != "sect0001" || list.Sections[0].PhaseID != "phid0001" || list.Sections[0].Name != "Section 1" {
+		t.Errorf("unexpected Sections: %v", list.Sections)
 	}
 	if len(list.Tasks) != 1 {
 		t.Fatalf("expected 1 task, got %d", len(list.Tasks))
@@ -95,6 +113,21 @@ func TestSaveUpdatesLastUpdatedAndRoundTrips(t *testing.T) {
 	}
 	if !loaded.LastUpdated.Equal(list.LastUpdated) {
 		t.Errorf("LastUpdated round-trip mismatch: saved %v, loaded %v", list.LastUpdated, loaded.LastUpdated)
+	}
+}
+
+func TestSaveFilePermissions(t *testing.T) {
+	s := newJSONStorage(t)
+	list := &TaskList{Version: "1.0", Tasks: []Task{}}
+	if err := s.Save(list); err != nil {
+		t.Fatalf("Save: %v", err)
+	}
+	info, err := os.Stat(s.path)
+	if err != nil {
+		t.Fatalf("Stat: %v", err)
+	}
+	if got := info.Mode().Perm(); got != 0644 {
+		t.Errorf("expected file permissions 0644, got %04o", got)
 	}
 }
 

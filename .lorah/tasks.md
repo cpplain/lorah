@@ -231,7 +231,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
 ### Storage Core
 
-- [pending] Write tests for storage core (json_storage.go)
+- [completed] Write tests for storage core (json_storage.go)
 
   ```notes
   - Test in `internal/task/json_storage_test.go`
@@ -243,6 +243,11 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Add Storage interface in `internal/task/storage.go` and JSONStorage struct stub in `internal/task/json_storage.go` for compilation
   - JSONStorage stub: `Load()` returns `&TaskList{}` (not nil); all other methods return errors
   - All tests should fail as expected (stubs are no-ops); no panics
+  - NOTE: Prior overzealous agent already wrote full implementation in json_storage.go and all test cases
+    for CRUD, list/filter in json_storage_test.go. Added missing test coverage: expanded
+    TestLoadExistingFile to verify all fields (description, phases, sections, version, lastUpdated),
+    and added TestSaveFilePermissions (0644). Full implementation was already present and correct.
+    All tests pass.
   ```
 
 - [pending] Implement storage core (storage.go + json_storage.go)
@@ -263,6 +268,8 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Save: acquire write lock; set `list.LastUpdated = time.Now()`; `json.MarshalIndent(list, "", "  ")`; write to file with 0644 permissions
   - Stub remaining methods (Get/List/Create/Update/Delete return errors) to satisfy the interface
   - All tests should pass
+  - NOTE: Prior overzealous agent already implemented everything in storage.go and json_storage.go
+    including full CRUD and List. Verify all tests pass, mark completed.
   ```
 
 ### Storage Create, Get, Update, Delete

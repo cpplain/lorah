@@ -692,7 +692,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Next task (Implement create handler): must add validation that --section without phase context returns 1.
   ```
 
-- [pending] Implement create handler (cmd.go)
+- [completed] Implement create handler (cmd.go)
 
   ```notes
   - Add to `internal/task/cmd.go`
@@ -709,6 +709,9 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Auto-generation flags (`--phase-name`, `--phase-description`, `--section-name`, `--section-description`, `--project-name`, `--project-description`) parsed but not yet handled (implemented in next section)
 
   - All tests should pass
+  - Prior overzealous agent had already written most of the implementation (auto-generation included).
+    Only missing validation: `--section` without phase context (`--phase` or `--phase-name`) must return 1.
+    Added guard before `sectionID = *section` in createCmd. All tests pass.
   ```
 
 ### Create Auto-Generation

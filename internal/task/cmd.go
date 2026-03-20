@@ -236,6 +236,10 @@ func createCmd(args []string, w io.Writer, storage Storage) int {
 	var sectionID string
 	var newSectionID string
 	if *section != "" {
+		if phaseID == "" {
+			fmt.Fprintln(os.Stderr, "--section requires a phase context (--phase or --phase-name)")
+			return 1
+		}
 		sectionID = *section
 		if *sectionName != "" || *sectionDesc != "" {
 			for i, s := range list.Sections {

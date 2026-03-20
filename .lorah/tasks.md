@@ -557,7 +557,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Next task (Implement dispatch): must add --help/-h handling to HandleTask and implement deleteCmd
   ```
 
-- [pending] Implement dispatch (cmd.go)
+- [completed] Implement dispatch (cmd.go)
 
   ```notes
   - Create `internal/task/cmd.go`
@@ -574,6 +574,10 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
   - Add stub handlers for list/get/create/update/delete/export (return 1) to satisfy the switch; implement in subsequent tasks
   - All tests should pass
+  - Prior overzealous agent had implemented all handlers except deleteCmd (stub) and --help handling.
+  - Added --help/-help/-h case to HandleTask switch (returns 0).
+  - Implemented deleteCmd: extracts ID from args[0], returns 1 with usage if missing, calls storage.Delete(id), returns 1 with error if not found, returns 0.
+  - All tests pass.
   ```
 
 ### List Subcommand

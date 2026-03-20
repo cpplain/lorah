@@ -38,6 +38,9 @@ func HandleTask(args []string, w io.Writer, storage Storage) int {
 		return 1
 	}
 	switch args[0] {
+	case "--help", "-help", "-h":
+		fmt.Fprintln(os.Stderr, "usage: lorah task <subcommand> [args...]")
+		return 0
 	case "list":
 		return listCmd(args[1:], w, storage)
 	case "get":
@@ -420,9 +423,16 @@ func updateCmd(args []string, w io.Writer, storage Storage) int {
 
 func deleteCmd(args []string, w io.Writer, storage Storage) int {
 	_ = w
-	_ = storage
-	_ = args
-	return 1
+	if len(args) == 0 || strings.HasPrefix(args[0], "-") {
+		fmt.Fprintln(os.Stderr, "usage: lorah task delete <id>")
+		return 1
+	}
+	id := args[0]
+	if err := storage.Delete(id); err != nil {
+		fmt.Fprintf(os.Stderr, "error: %v\n", err)
+		return 1
+	}
+	return 0
 }
 
 func exportCmd(args []string, w io.Writer, storage Storage) int {

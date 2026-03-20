@@ -946,7 +946,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
 ### Wire-Up
 
-- [pending] Wire up task command to main.go
+- [completed] Wire up task command to main.go
 
   ```notes
   - Update `taskCmd` in `main.go`:
@@ -955,4 +955,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
     - Import `internal/task` package
   - No new tests needed — existing routing tests in `main_test.go` cover the dispatch path
   - Verify: `go build` succeeds; `lorah task --help` prints usage; `lorah task list` runs against empty state without error
+  - NOTE: Prior overzealous agent had already fully implemented the wire-up in main.go: taskCmd creates
+    NewJSONStorage("tasks.json") and calls HandleTask(args, os.Stdout, storage). All tests pass.
+    Verified and marked completed.
   ```

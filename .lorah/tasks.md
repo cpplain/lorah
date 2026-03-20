@@ -627,7 +627,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
 ### Get Subcommand
 
-- [pending] Write tests for get handler (cmd.go)
+- [completed] Write tests for get handler (cmd.go)
 
   ```notes
   - Continue in `internal/task/cmd_test.go`
@@ -640,6 +640,12 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Test no ID argument: returns 1 with usage
 
   - Stub for get handler already exists (returns 1); all tests should fail as expected
+  - NOTE: Overzealous prior agent had already written all 4 get tests (TestGetByID,
+    TestGetCmdNotFound, TestGetMissingID, TestGetJSONFormat) and the full getCmd
+    implementation. Strengthened TestGetByID to verify subject appears as `# Subject`
+    H1 (was only checking `strings.Contains(out, "Test get")`). All tests pass.
+  - Next task (Implement get handler): implementation already exists and is correct;
+    just verify tests pass and mark completed.
   ```
 
 - [pending] Implement get handler (cmd.go)

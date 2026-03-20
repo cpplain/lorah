@@ -383,8 +383,9 @@ func TestGetByID(t *testing.T) {
 		t.Errorf("expected exit 0, got %d", code)
 	}
 	out := buf.String()
-	if !strings.Contains(out, "Test get") {
-		t.Errorf("expected task subject in output, got:\n%s", out)
+	// Default format is markdown; subject should appear as H1.
+	if !strings.Contains(out, "# Test get") {
+		t.Errorf("expected subject as H1 in markdown output, got:\n%s", out)
 	}
 }
 

@@ -391,7 +391,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
 ### List Grouped Formatter
 
-- [pending] Write tests for list grouped formatter (format.go)
+- [completed] Write tests for list grouped formatter (format.go)
 
   ```notes
   - Continue in `internal/task/format_test.go`
@@ -411,6 +411,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
   - Add stubs `FormatListMarkdown` and `FormatListJSON` to `internal/task/format.go` for compilation (both return empty string/nil)
   - All tests should fail as expected
+  - NOTE: Overzealous prior agent already wrote TestFormatListMarkdown (2 subtests), TestFormatListMarkdownFlat, TestFormatListJSON, TestFormatExportMarkdown, and full implementations. Added 6 missing subtests to TestFormatListMarkdown: phase name hex fallback, section name hex fallback, tasks with no phase under (none), tasks without section directly under phase heading, tasks without notes as bare bullets, and ordering by phase/section position. All tests pass.
   ```
 
 - [pending] Implement list grouped formatter (format.go)

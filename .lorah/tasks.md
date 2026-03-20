@@ -668,7 +668,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
 ### Create Subcommand
 
-- [pending] Write tests for create handler (cmd.go)
+- [completed] Write tests for create handler (cmd.go)
 
   ```notes
   - Continue in `internal/task/cmd_test.go`
@@ -684,6 +684,12 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Test `--section=<hex-id>` without phase context (no `--phase` or `--phase-name`): returns 1 with error
 
   - Stub for create handler already exists (returns 1); all tests should fail as expected
+  - NOTE: Most create tests already existed from the overzealous prior agent (TestCreateRequiresSubject,
+    TestCreateBasic, TestCreateWithExistingPhase, TestCreateInvalidStatus). Added 3 missing tests:
+    TestCreateWithStatus (PASSES — implementation already validates status), TestCreateWithExistingSection
+    (PASSES — implementation sets sectionID correctly), TestCreateSectionWithoutPhaseContext (FAILS —
+    implementation doesn't validate that --section requires a phase context per spec).
+  - Next task (Implement create handler): must add validation that --section without phase context returns 1.
   ```
 
 - [pending] Implement create handler (cmd.go)

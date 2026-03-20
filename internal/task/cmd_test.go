@@ -560,6 +560,61 @@ func TestCreateWithProjectNameAndDescription(t *testing.T) {
 	}
 }
 
+func TestCreateWithStatus(t *testing.T) {
+	store := newMockStorage()
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"create", "--subject=Task", "--status=in_progress"}, &buf, store)
+	if code != 0 {
+		t.Errorf("expected exit 0, got %d", code)
+	}
+	if len(store.list.Tasks) != 1 {
+		t.Fatalf("expected 1 task created, got %d", len(store.list.Tasks))
+	}
+	if store.list.Tasks[0].Status != StatusInProgress {
+		t.Errorf("expected status in_progress, got %q", store.list.Tasks[0].Status)
+	}
+}
+
+func TestCreateWithExistingSection(t *testing.T) {
+	store := newMockStorage()
+	store.list.Phases = []Phase{{ID: "phase001", Name: "Phase 1"}}
+	store.list.Sections = []Section{{ID: "sect0001", PhaseID: "phase001", Name: "Section 1.1"}}
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"create", "--subject=Task", "--phase=phase001", "--section=sect0001"}, &buf, store)
+	if code != 0 {
+		t.Errorf("expected exit 0, got %d", code)
+	}
+	out := buf.String()
+	// Should NOT output "section <id>" since we used an existing section
+	if strings.Contains(out, "section ") {
+		t.Errorf("expected no 'section <id>' when using existing section, got:\n%s", out)
+	}
+	if !strings.Contains(out, "task ") {
+		t.Errorf("expected 'task <id>' in output, got:\n%s", out)
+	}
+	if len(store.list.Tasks) != 1 || store.list.Tasks[0].SectionID != "sect0001" {
+		t.Errorf("expected task sectionID 'sect0001', tasks: %+v", store.list.Tasks)
+	}
+	// No new section should have been created
+	if len(store.list.Sections) != 1 {
+		t.Errorf("expected existing section count to remain 1, got %d", len(store.list.Sections))
+	}
+}
+
+func TestCreateSectionWithoutPhaseContext(t *testing.T) {
+	store := newMockStorage()
+	store.list.Sections = []Section{{ID: "sect0001", PhaseID: "phase001", Name: "Section 1.1"}}
+
+	var buf bytes.Buffer
+	// --section without --phase or --phase-name should return 1
+	code := HandleTask([]string{"create", "--subject=Task", "--section=sect0001"}, &buf, store)
+	if code != 1 {
+		t.Errorf("expected exit 1 when --section used without phase context, got %d", code)
+	}
+}
+
 // --- update tests ---
 
 func TestUpdateStatus(t *testing.T) {

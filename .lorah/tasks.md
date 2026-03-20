@@ -845,7 +845,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
     and --section-name/--section-description without --section all return 1 with an error message.
   ```
 
-- [pending] Implement update metadata (cmd.go)
+- [completed] Implement update metadata (cmd.go)
 
   ```notes
   - Add to the update handler in `internal/task/cmd.go`
@@ -858,6 +858,11 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Call `storage.Save(list)` after applying metadata changes
 
   - All tests should pass
+  - Prior overzealous agent had already implemented the metadata upsert logic in updateCmd but was
+    silently skipping metadata operations when required dependent flags were missing instead of
+    returning 1. Added 5 validation guards (phase-name/phase-description require --phase;
+    section requires --phase; section-name/section-description require --section) placed before
+    any storage operations to avoid partial writes. All 5 failing tests now pass.
   ```
 
 ### Delete Subcommand

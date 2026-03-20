@@ -333,6 +333,26 @@ func updateCmd(args []string, w io.Writer, storage Storage) int {
 		fmt.Fprintf(os.Stderr, "invalid status: %s\n", *statusFlag)
 		return 1
 	}
+	if provided["phase-name"] && !provided["phase"] {
+		fmt.Fprintln(os.Stderr, "--phase-name requires --phase")
+		return 1
+	}
+	if provided["phase-description"] && !provided["phase"] {
+		fmt.Fprintln(os.Stderr, "--phase-description requires --phase")
+		return 1
+	}
+	if provided["section"] && !provided["phase"] {
+		fmt.Fprintln(os.Stderr, "--section requires --phase")
+		return 1
+	}
+	if provided["section-name"] && !provided["section"] {
+		fmt.Fprintln(os.Stderr, "--section-name requires --section")
+		return 1
+	}
+	if provided["section-description"] && !provided["section"] {
+		fmt.Fprintln(os.Stderr, "--section-description requires --section")
+		return 1
+	}
 
 	task, err := storage.Get(id)
 	if err != nil {

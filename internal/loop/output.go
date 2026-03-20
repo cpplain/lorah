@@ -45,10 +45,10 @@ func printMessages(r io.Reader) {
 				switch blockType {
 				case "text":
 					text, _ := block["text"].(string)
-					printSection("Claude", colorBlue, text)
+					printSection("Claude", "", text)
 				case "thinking":
 					thinking, _ := block["thinking"].(string)
-					printSection("Claude (thinking)", colorBlue, thinking)
+					printSection("Claude (thinking)", "", thinking)
 				case "tool_use":
 					name, _ := block["name"].(string)
 					if name == "" {

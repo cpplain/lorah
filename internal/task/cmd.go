@@ -54,7 +54,7 @@ func HandleTask(args []string, w io.Writer, storage Storage) int {
 	case "export":
 		return exportCmd(args[1:], w, storage)
 	default:
-		fmt.Fprintf(os.Stderr, "unknown subcommand: %s\n", args[0])
+		fmt.Fprintf(os.Stderr, "Unknown subcommand: %s\n", args[0])
 		return 1
 	}
 }

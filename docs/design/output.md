@@ -151,11 +151,12 @@ Where `N` is `len(lines) - 1`. Single-line content is displayed as-is.
 
 These are printed by the loop (not by `printMessages`) to mark loop lifecycle events:
 
-| Event              | Label     | Color       | Content                                  |
-| ------------------ | --------- | ----------- | ---------------------------------------- |
-| Loop start         | `"Lorah"` | `colorBlue` | `"Starting loop..."`                     |
-| Loop success       | `"Lorah"` | `colorBlue` | `"Loop completed successfully"`          |
-| Interrupt received | `"Lorah"` | `colorBlue` | `"Received interrupt, shutting down..."` |
+| Event            | Label     | Color       | Content                                                |
+| ---------------- | --------- | ----------- | ------------------------------------------------------ |
+| Loop start       | `"Lorah"` | `colorBlue` | `"Starting loop..."`                                   |
+| Loop success     | `"Lorah"` | `colorBlue` | `"Loop completed successfully"`                        |
+| First interrupt  | `"Lorah"` | `colorBlue` | `"Received interrupt, stopping after current loop..."` |
+| Second interrupt | `"Lorah"` | `colorBlue` | `"Received second interrupt, shutting down..."`        |
 
 Error messages on failed iterations are printed directly to stderr (not via `printSection`):
 

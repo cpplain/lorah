@@ -36,7 +36,7 @@ func run(ctx context.Context, _ context.CancelFunc, promptFile string, flags []s
 		printSection("Lorah", colorBlue, "Starting loop...")
 
 		if err := runFn(ctx, promptFile, flags); err != nil {
-			fmt.Fprintf(os.Stderr, "\n%s⏺ %sError%s\n", colorRed, colorBold, colorReset)
+			fmt.Fprintf(os.Stderr, "%s⏺ %sError%s\n", colorRed, colorBold, colorReset)
 			fmt.Fprintf(os.Stderr, "%v\n\n", err)
 			fmt.Fprintf(os.Stderr, "Retrying in %v...\n\n", delay)
 			time.Sleep(delay)

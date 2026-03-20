@@ -282,7 +282,7 @@ lorah task list [--status=STATUS] [--phase=P] [--section=S] [--limit=N] [--flat]
 
 - Default format: `markdown`
 - `--status` is repeatable to filter by multiple statuses
-- Results ordered by phase, then section, then id (ordered by position in the `phases`/`sections` arrays, then task ID)
+- Results ordered by phase, then section (ordered by position in the `phases`/`sections` arrays), then task insertion order
 - `--flat`: suppresses phase and section headings; outputs a flat bullet list of tasks. Only applies to markdown format; ignored when `--format=json`
 
 ### `get`

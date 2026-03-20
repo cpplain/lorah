@@ -121,6 +121,7 @@ Subcommands:
   get         Get task details
   create      Create a new task
   update      Update a task
+  delete      Delete a task
   export      Export tasks to markdown
 
 Flags:

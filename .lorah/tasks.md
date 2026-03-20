@@ -367,7 +367,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
     cases), TestFormatTaskJSON (valid JSON + no envelope). All tests pass.
   ```
 
-- [pending] Implement single-task formatters (format.go)
+- [completed] Implement single-task formatters (format.go)
 
   ```notes
   - Create `internal/task/format.go`
@@ -386,7 +386,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - All tests should pass
   - NOTE: Full implementation already exists in `internal/task/format.go` from overzealous prior agent,
     including FormatTaskMarkdown, FormatTaskJSON, FormatListMarkdown, FormatListJSON,
-    FormatExportMarkdown, and shared helpers. All tests pass. Next agent: just verify and mark completed.
+    FormatExportMarkdown, and shared helpers. All tests pass. Verified all tests pass; marked completed.
   ```
 
 ### List Grouped Formatter

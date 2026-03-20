@@ -814,6 +814,41 @@ func TestUpdateSetsLastUpdated(t *testing.T) {
 	}
 }
 
+func TestUpdateSubject(t *testing.T) {
+	store := newMockStorage()
+	now := time.Now()
+	task := &Task{ID: "upd00006", Subject: "Old subject", Status: StatusPending, LastUpdated: now}
+	store.tasks["upd00006"] = task
+	store.list.Tasks = []Task{*task}
+
+	var buf bytes.Buffer
+	code := HandleTask([]string{"update", "upd00006", "--subject=New subject"}, &buf, store)
+	if code != 0 {
+		t.Errorf("expected exit 0, got %d", code)
+	}
+	if store.tasks["upd00006"].Subject != "New subject" {
+		t.Errorf("expected subject 'New subject', got %q", store.tasks["upd00006"].Subject)
+	}
+}
+
+func TestUpdateSubjectClear(t *testing.T) {
+	store := newMockStorage()
+	now := time.Now()
+	task := &Task{ID: "upd00007", Subject: "Has subject", Status: StatusPending, LastUpdated: now}
+	store.tasks["upd00007"] = task
+	store.list.Tasks = []Task{*task}
+
+	var buf bytes.Buffer
+	// --subject="" should clear the subject (not treated as "not provided")
+	code := HandleTask([]string{"update", "upd00007", "--subject="}, &buf, store)
+	if code != 0 {
+		t.Errorf("expected exit 0, got %d", code)
+	}
+	if store.tasks["upd00007"].Subject != "" {
+		t.Errorf("expected subject to be cleared, got %q", store.tasks["upd00007"].Subject)
+	}
+}
+
 // --- delete tests ---
 
 func TestDeleteByID(t *testing.T) {

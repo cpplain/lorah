@@ -765,7 +765,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
 ### Update Basic Fields
 
-- [pending] Write tests for update basic fields (cmd.go)
+- [completed] Write tests for update basic fields (cmd.go)
 
   ```notes
   - Continue in `internal/task/cmd_test.go`
@@ -780,6 +780,13 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Test invalid `--status` value: returns 1 with error message
 
   - Stub for update handler already exists (returns 1); all tests should fail as expected
+  - NOTE: Overzealous prior agent had already written most update tests (TestUpdateStatus,
+    TestUpdateNotes, TestUpdateCmdNotFound, TestUpdateMissingID, TestUpdatePartialPreservesFields,
+    TestUpdateInvalidStatus, TestUpdateSetsLastUpdated) and the full updateCmd implementation.
+    Added 2 missing tests: TestUpdateSubject (--subject updates subject) and TestUpdateSubjectClear
+    (--subject="" clears subject, not treated as "not provided"). All tests pass.
+  - Next task (Implement update basic fields): implementation already exists and is correct;
+    just verify tests pass and mark completed.
   ```
 
 - [pending] Implement update basic fields (cmd.go)

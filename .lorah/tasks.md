@@ -309,7 +309,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
 
 ### Storage List & Filter
 
-- [pending] Write tests for storage list and filter (json_storage.go)
+- [completed] Write tests for storage list and filter (json_storage.go)
 
   ```notes
   - Continue in `internal/task/json_storage_test.go`
@@ -322,6 +322,9 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Test List — combined filters: status + PhaseID (AND-combined)
   - Test List — Limit: `Limit=0` means no limit; `Limit=N` returns at most N tasks
   - Stub from previous section already exists (returns error); all tests should fail as expected; no panics
+  - Prior agent had already written tests for single status, PhaseID, SectionID, Limit, and NoLimit.
+    Added the three missing cases: TestListNoFilter, TestListFilterByMultipleStatuses, TestListFilterCombined.
+  - Full List implementation was already present; all tests pass.
   ```
 
 - [pending] Implement storage list and filter (json_storage.go)

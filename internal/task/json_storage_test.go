@@ -191,6 +191,28 @@ func TestGetNotFound(t *testing.T) {
 	}
 }
 
+func TestListNoFilter(t *testing.T) {
+	s := newJSONStorage(t)
+	tasks := []Task{
+		{ID: "id000001", Subject: "pending task", Status: StatusPending},
+		{ID: "id000002", Subject: "in-progress task", Status: StatusInProgress},
+		{ID: "id000003", Subject: "completed task", Status: StatusCompleted},
+	}
+	for i := range tasks {
+		if err := s.Create(&tasks[i]); err != nil {
+			t.Fatalf("Create task %d: %v", i, err)
+		}
+	}
+
+	results, err := s.List(Filter{})
+	if err != nil {
+		t.Fatalf("List: %v", err)
+	}
+	if len(results) != 3 {
+		t.Errorf("expected 3 results, got %d", len(results))
+	}
+}
+
 func TestListFilterByStatus(t *testing.T) {
 	s := newJSONStorage(t)
 	tasks := []Task{
@@ -205,6 +227,57 @@ func TestListFilterByStatus(t *testing.T) {
 	}
 
 	results, err := s.List(Filter{Status: []TaskStatus{StatusPending}})
+	if err != nil {
+		t.Fatalf("List: %v", err)
+	}
+	if len(results) != 1 {
+		t.Fatalf("expected 1 result, got %d", len(results))
+	}
+	if results[0].ID != "id000001" {
+		t.Errorf("expected ID %q, got %q", "id000001", results[0].ID)
+	}
+}
+
+func TestListFilterByMultipleStatuses(t *testing.T) {
+	s := newJSONStorage(t)
+	tasks := []Task{
+		{ID: "id000001", Subject: "pending task", Status: StatusPending},
+		{ID: "id000002", Subject: "in-progress task", Status: StatusInProgress},
+		{ID: "id000003", Subject: "completed task", Status: StatusCompleted},
+	}
+	for i := range tasks {
+		if err := s.Create(&tasks[i]); err != nil {
+			t.Fatalf("Create task %d: %v", i, err)
+		}
+	}
+
+	results, err := s.List(Filter{Status: []TaskStatus{StatusPending, StatusInProgress}})
+	if err != nil {
+		t.Fatalf("List: %v", err)
+	}
+	if len(results) != 2 {
+		t.Fatalf("expected 2 results, got %d", len(results))
+	}
+	ids := map[string]bool{results[0].ID: true, results[1].ID: true}
+	if !ids["id000001"] || !ids["id000002"] {
+		t.Errorf("expected ids id000001 and id000002, got %v", ids)
+	}
+}
+
+func TestListFilterCombined(t *testing.T) {
+	s := newJSONStorage(t)
+	tasks := []Task{
+		{ID: "id000001", Subject: "pending in phase", Status: StatusPending, PhaseID: "phase001"},
+		{ID: "id000002", Subject: "completed in phase", Status: StatusCompleted, PhaseID: "phase001"},
+		{ID: "id000003", Subject: "pending no phase", Status: StatusPending},
+	}
+	for i := range tasks {
+		if err := s.Create(&tasks[i]); err != nil {
+			t.Fatalf("Create task %d: %v", i, err)
+		}
+	}
+
+	results, err := s.List(Filter{Status: []TaskStatus{StatusPending}, PhaseID: "phase001"})
 	if err != nil {
 		t.Fatalf("List: %v", err)
 	}

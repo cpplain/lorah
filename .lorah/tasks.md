@@ -789,7 +789,7 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
     just verify tests pass and mark completed.
   ```
 
-- [pending] Implement update basic fields (cmd.go)
+- [completed] Implement update basic fields (cmd.go)
 
   ```notes
   - Add to `internal/task/cmd.go`
@@ -805,6 +805,11 @@ Implement the `lorah task` subcommand system per `task.md`. Provides CRUD operat
   - Metadata flags (`--phase-name`, `--phase-description`, `--section-name`, `--section-description`, `--project-name`, `--project-description`) parsed but not yet handled (implemented in next section)
 
   - All tests should pass
+  - NOTE: Prior overzealous agent already wrote the full updateCmd implementation including metadata
+    handling (phase-name, phase-description, section-name, section-description, project-name,
+    project-description). All tests pass. Verified and marked completed.
+  - NOTE for next task (Write tests for update metadata): implementation already exists and handles
+    all metadata mutations; tests must match existing behavior. See updateCmd in cmd.go lines 306-430.
   ```
 
 ### Update Metadata

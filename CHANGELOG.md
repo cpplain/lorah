@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Subcommand-based CLI: `lorah <command> [arguments]` with `run` and `task` commands
+- Task management system (`lorah task`) with 6 subcommands: list, get, create, update, delete, export
+- JSON-based task storage in `tasks.json` with Storage interface for future backend swaps
+- Two task output formats: json, markdown (default); `--flat` flag on `list` for flat bullet output
+- Loop status messages now include iteration number
+
+### Changed
+
+- **BREAKING**: CLI changed to `lorah run <prompt-file> [claude-flags...]` (was `lorah <prompt-file> [claude-flags...]`)
+- Removed color from Claude text and thinking output sections
+
+### Fixed
+
+- Removed extra newline before loop error output
+- Tool name matching now uses prefix match for Task tool names
+- Scanner errors are now handled gracefully instead of being silently ignored
+
 ## [0.4.0] - 2026-03-09
 
 ### Changed
@@ -25,7 +44,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Infinite loop execution following [Ralph pattern](https://ghuntley.com/ralph/)
-- Direct flag passthrough to Claude CLI
+- Direct flag passthrough to Claude Code CLI
 
 ### Changed
 
@@ -42,7 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **BREAKING**: Configuration format changed to a split structure with `harness` (lorah settings) and `claude` (passthrough to Claude CLI) sections. Existing configs require migration—run `lorah info template` to see the new format.
+- **BREAKING**: Configuration format changed to a split structure with `harness` (lorah settings) and `claude` (passthrough to Claude Code CLI) sections. Existing configs require migration—run `lorah info template` to see the new format.
 - Updated documentation to document two-phase execution model with fixed file names (initialization and implementation phases)
 - Renamed `docs/setup-guide.md` to `docs/getting-started.md`
 - Renamed review workflow prompts from `inventory.md`/`fix.md` to `initialization.md`/`implementation.md`

@@ -8,6 +8,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/cpplain/lorah/internal/loop"
 	"github.com/cpplain/lorah/internal/task"
@@ -17,7 +18,7 @@ import (
 var Version = "dev"
 
 func printUsage() {
-	fmt.Fprint(os.Stderr, `Usage: lorah <command> [arguments]
+	fmt.Fprint(os.Stderr, `Usage: lorah [--dir=DIR] <command> [arguments]
 
 Simple infinite-loop harness for Claude Code.
 
@@ -26,6 +27,7 @@ Commands:
   task    Manage tasks
 
 Flags:
+      --dir        Lorah data directory (default .lorah)
   -V, --version    Print version and exit
   -h, --help       Show this help message
 
@@ -56,7 +58,7 @@ Flags:
 func printTaskUsage() {
 	fmt.Fprint(os.Stderr, `Usage: lorah task <subcommand> [args...] [flags...]
 
-Manage tasks stored in tasks.json.
+Manage tasks stored in .lorah/tasks.json.
 
 Subcommands:
   list        List tasks
@@ -74,7 +76,7 @@ Run 'lorah task <subcommand> --help' for subcommand-specific help.
 }
 
 // route dispatches CLI arguments to the appropriate handler and returns an exit code.
-func route(args []string, version string, runFn func(string, []string), taskFn func([]string) error) int {
+func route(args []string, version string, runFn func(string, []string), taskFn func(string, []string) error) int {
 	if len(args) == 0 {
 		printUsage()
 		return 1
@@ -88,9 +90,30 @@ func route(args []string, version string, runFn func(string, []string), taskFn f
 	case "--help", "-help", "-h":
 		printUsage()
 		return 0
+	}
 
+	// Extract --dir before command dispatch.
+	dir := ".lorah"
+	var remaining []string
+	for i := 0; i < len(args); i++ {
+		if args[i] == "--dir" && i+1 < len(args) {
+			dir = args[i+1]
+			i++
+		} else if strings.HasPrefix(args[i], "--dir=") {
+			dir = strings.TrimPrefix(args[i], "--dir=")
+		} else {
+			remaining = append(remaining, args[i])
+		}
+	}
+
+	if len(remaining) == 0 {
+		printUsage()
+		return 1
+	}
+
+	switch remaining[0] {
 	case "run":
-		runArgs := args[1:]
+		runArgs := remaining[1:]
 		if len(runArgs) == 0 {
 			printRunUsage()
 			return 1
@@ -105,7 +128,7 @@ func route(args []string, version string, runFn func(string, []string), taskFn f
 		return 0
 
 	case "task":
-		taskArgs := args[1:]
+		taskArgs := remaining[1:]
 		if len(taskArgs) == 0 {
 			printTaskUsage()
 			return 1
@@ -114,14 +137,14 @@ func route(args []string, version string, runFn func(string, []string), taskFn f
 			printTaskUsage()
 			return 0
 		}
-		if err := taskFn(taskArgs); err != nil {
+		if err := taskFn(dir, taskArgs); err != nil {
 			fmt.Fprintf(os.Stderr, "%v\n", err)
 			return 1
 		}
 		return 0
 
 	default:
-		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", args[0])
+		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", remaining[0])
 		printUsage()
 		return 1
 	}
@@ -131,8 +154,11 @@ func runCmd(promptFile string, claudeFlags []string) {
 	loop.Run(promptFile, claudeFlags)
 }
 
-func taskCmd(args []string) error {
-	storage := task.NewJSONStorage("tasks.json")
+func taskCmd(dir string, args []string) error {
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		return fmt.Errorf("creating storage directory: %w", err)
+	}
+	storage := task.NewJSONStorage(dir)
 	code := task.HandleTask(args, os.Stdout, storage)
 	if code != 0 {
 		return fmt.Errorf("task command failed")

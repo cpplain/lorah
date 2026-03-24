@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 )
@@ -14,9 +15,9 @@ type JSONStorage struct {
 	path string
 }
 
-// NewJSONStorage returns a JSONStorage backed by the given file path.
-func NewJSONStorage(path string) *JSONStorage {
-	return &JSONStorage{path: path}
+// NewJSONStorage returns a JSONStorage backed by tasks.json in dir.
+func NewJSONStorage(dir string) *JSONStorage {
+	return &JSONStorage{path: filepath.Join(dir, "tasks.json")}
 }
 
 func (s *JSONStorage) Load() (*TaskList, error) {

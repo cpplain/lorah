@@ -27,7 +27,7 @@ internal/loop/
 internal/task/
   task.go                 Core types: Phase, Section, Task, TaskStatus, TaskList, Filter
   storage.go              Storage interface
-  json_storage.go         JSONStorage implementation (tasks.json)
+  json_storage.go         JSONStorage implementation (.lorah/tasks.json)
   format.go               Output formatters: json, markdown
   cmd.go                  CLI subcommand handlers
 docs/design/              Design specifications (authoritative reference)

@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -102,8 +104,10 @@ func TestRoute_Run(t *testing.T) {
 }
 
 func TestRoute_Task(t *testing.T) {
+	var calledDir string
 	var calledArgs []string
-	taskFn := func(args []string) error {
+	taskFn := func(dir string, args []string) error {
+		calledDir = dir
 		calledArgs = args
 		return nil
 	}
@@ -112,8 +116,65 @@ func TestRoute_Task(t *testing.T) {
 	if code != 0 {
 		t.Errorf("expected exit 0, got %d", code)
 	}
+	if calledDir != ".lorah" {
+		t.Errorf("expected default dir %q, got %q", ".lorah", calledDir)
+	}
 	if len(calledArgs) != 1 || calledArgs[0] != "list" {
 		t.Errorf("unexpected args: %v", calledArgs)
+	}
+}
+
+func TestRoute_DirFlag(t *testing.T) {
+	dataDir := t.TempDir()
+	var cmdErr error
+	captureOutput(func() {
+		err := route([]string{"--dir=" + dataDir, "task", "create", "--subject=test"}, "dev", nil, taskCmd)
+		if err != 0 {
+			cmdErr = fmt.Errorf("exit %d", err)
+		}
+	})
+	if cmdErr != nil {
+		t.Errorf("unexpected error: %v", cmdErr)
+	}
+	if _, err := os.Stat(filepath.Join(dataDir, "tasks.json")); err != nil {
+		t.Errorf("expected tasks.json in %s, got %v", dataDir, err)
+	}
+}
+
+func TestRoute_DirFlagSpaceSeparated(t *testing.T) {
+	dataDir := t.TempDir()
+	var cmdErr error
+	captureOutput(func() {
+		err := route([]string{"--dir", dataDir, "task", "create", "--subject=test"}, "dev", nil, taskCmd)
+		if err != 0 {
+			cmdErr = fmt.Errorf("exit %d", err)
+		}
+	})
+	if cmdErr != nil {
+		t.Errorf("unexpected error: %v", cmdErr)
+	}
+	if _, err := os.Stat(filepath.Join(dataDir, "tasks.json")); err != nil {
+		t.Errorf("expected tasks.json in %s, got %v", dataDir, err)
+	}
+}
+
+func TestRoute_DefaultDir(t *testing.T) {
+	orig, err := os.Getwd()
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	if err := os.Chdir(dir); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.Chdir(orig) })
+
+	captureOutput(func() {
+		route([]string{"task", "create", "--subject=test"}, "dev", nil, taskCmd)
+	})
+
+	if _, err := os.Stat(filepath.Join(dir, ".lorah", "tasks.json")); err != nil {
+		t.Errorf("expected .lorah/tasks.json in %s, got %v", dir, err)
 	}
 }
 

@@ -19,7 +19,7 @@ Design documentation for `lorah`, a simple infinite-loop harness for Claude Code
 | **loop iteration** | One complete execution of the Claude Code CLI subprocess from start to finish              |
 | **stream-JSON**    | Newline-delimited JSON output by Claude Code CLI's `--output-format=stream-json` flag      |
 | **claude flags**   | Arguments passed through to the `claude` CLI unchanged after the prompt file               |
-| **task file**      | JSON file (`tasks.json`) storing structured task data for agent workflow management        |
+| **task file**      | JSON file (`.lorah/tasks.json`) storing structured task data for agent workflow management |
 
 ## Design Principles
 

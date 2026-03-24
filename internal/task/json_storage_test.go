@@ -3,7 +3,6 @@ package task
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 )
@@ -11,7 +10,7 @@ import (
 func newJSONStorage(t *testing.T) *JSONStorage {
 	t.Helper()
 	dir := t.TempDir()
-	return &JSONStorage{path: filepath.Join(dir, "tasks.json")}
+	return NewJSONStorage(dir)
 }
 
 func TestLoadNonExistent(t *testing.T) {

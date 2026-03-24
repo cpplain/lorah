@@ -30,7 +30,7 @@ All routing is a stdlib `switch` statement with no external dependencies.
 ### Usage
 
 ```
-lorah <command> [arguments]
+lorah [--dir=DIR] <command> [arguments]
 ```
 
 ### Commands
@@ -42,12 +42,13 @@ lorah <command> [arguments]
 
 ### Top-Level Flags
 
-| Flag        | Short            | Description                     |
-| ----------- | ---------------- | ------------------------------- |
-| `--version` | `-V`, `-version` | Print version and exit 0        |
-| `--help`    | `-h`, `-help`    | Show top-level usage and exit 0 |
+| Flag        | Short            | Description                             |
+| ----------- | ---------------- | --------------------------------------- |
+| `--dir`     |                  | Lorah data directory (default `.lorah`) |
+| `--version` | `-V`, `-version` | Print version and exit 0                |
+| `--help`    | `-h`, `-help`    | Show top-level usage and exit 0         |
 
-Top-level flags are only recognized as `os.Args[1]`. They are not parsed anywhere else.
+`--version` and `--help` are only recognized as `os.Args[1]`. They are not parsed anywhere else. `--dir` is extracted from args before command dispatch and passed to the relevant command handler.
 
 ---
 
@@ -58,9 +59,10 @@ Top-level flags are only recognized as `os.Args[1]`. They are not parsed anywher
 1. No arguments → print top-level usage, exit 1
 2. `--version`, `-version`, `-V` → print `lorah <version>`, exit 0
 3. `--help`, `-help`, `-h` → print top-level usage, exit 0
-4. `run` → dispatch to `runCmd` with `os.Args[2:]`
-5. `task` → dispatch to `taskCmd` with `os.Args[2:]`
-6. Anything else → print `Unknown command: <input>` + top-level usage to stderr, exit 1
+4. Extract `--dir`/`--dir=X` from remaining args; default `.lorah`
+5. `run` → dispatch to `runCmd` with remaining args
+6. `task` → dispatch to `taskCmd(dir, remainingArgs)`
+7. Anything else → print `Unknown command: <input>` + top-level usage to stderr, exit 1
 
 ### Version Output
 
@@ -73,7 +75,7 @@ lorah <version>
 ### Top-Level Usage (`lorah` or `lorah --help`)
 
 ```
-Usage: lorah <command> [arguments]
+Usage: lorah [--dir=DIR] <command> [arguments]
 
 Simple infinite-loop harness for Claude Code.
 
@@ -82,6 +84,7 @@ Commands:
   task    Manage tasks
 
 Flags:
+      --dir        Lorah data directory (default .lorah)
   -V, --version    Print version and exit
   -h, --help       Show this help message
 
@@ -114,7 +117,7 @@ Flags:
 ```
 Usage: lorah task <subcommand> [args...] [flags...]
 
-Manage tasks stored in tasks.json.
+Manage tasks stored in .lorah/tasks.json.
 
 Subcommands:
   list        List tasks
@@ -176,7 +179,7 @@ func runCmd(args []string)
 ### `taskCmd` Behavior
 
 ```go
-func taskCmd(args []string)
+func taskCmd(dir string, args []string)
 ```
 
 1. If `len(args) == 0` → print task usage, exit 1
@@ -201,6 +204,9 @@ func taskCmd(args []string)
 # Version and help
 lorah --version
 lorah --help
+
+# Custom data directory
+lorah --dir=.myproject task list
 
 # Run command
 lorah run prompt.md

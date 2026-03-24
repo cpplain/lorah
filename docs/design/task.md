@@ -156,7 +156,7 @@ Filters are AND-combined. `Limit = 0` means no limit.
 
 ### JSON Backend Behavior
 
-- File: `tasks.json` in the working directory
+- File: `tasks.json` in the `.lorah` directory (default); directory overridden via the top-level `--dir` flag; `NewJSONStorage` receives a directory path and appends `tasks.json`
 - Thread safety: `sync.RWMutex` (read lock on `Load`, write lock on `Save`)
 - Non-existent file on `Load`: returns an empty `TaskList` with `Version: "1.0"` (not an error)
 - Duplicate `id` on `Create`: returns an error

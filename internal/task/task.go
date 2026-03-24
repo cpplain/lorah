@@ -41,7 +41,7 @@ type Task struct {
 	LastUpdated time.Time  `json:"lastUpdated"`
 }
 
-// TaskList is the root structure stored in tasks.json.
+// TaskList is the root structure stored in .lorah/tasks.json.
 type TaskList struct {
 	Name        string    `json:"name,omitempty"`
 	Description string    `json:"description,omitempty"`

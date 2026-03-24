@@ -61,6 +61,21 @@ func HandleTask(args []string, w io.Writer, storage Storage) int {
 
 func listCmd(args []string, w io.Writer, storage Storage) int {
 	fs := flag.NewFlagSet("lorah task list", flag.ContinueOnError)
+	fs.Usage = func() {
+		fmt.Fprint(os.Stderr, `Usage: lorah task list [flags...]
+
+List tasks with optional filters.
+
+Flags:
+      --status STATUS    Filter by status (repeatable): pending, in_progress, completed
+      --phase ID         Filter by phase ID
+      --section ID       Filter by section ID
+      --limit N          Maximum number of results (0 = no limit)
+      --flat             Flat bullet list, no headings or notes
+      --format FORMAT    Output format: markdown (default), json
+  -h, --help             Show this help message
+`)
+	}
 	var statuses multiFlag
 	fs.Var(&statuses, "status", "filter by status (repeatable)")
 	phase := fs.String("phase", "", "filter by phase ID")
@@ -69,6 +84,9 @@ func listCmd(args []string, w io.Writer, storage Storage) int {
 	flat := fs.Bool("flat", false, "flat bullet list, no headings or notes")
 	format := fs.String("format", "markdown", "output format (markdown|json)")
 	if err := fs.Parse(args); err != nil {
+		if err == flag.ErrHelp {
+			return 0
+		}
 		return 1
 	}
 
@@ -117,15 +135,31 @@ func listCmd(args []string, w io.Writer, storage Storage) int {
 }
 
 func getCmd(args []string, w io.Writer, storage Storage) int {
-	if len(args) == 0 || strings.HasPrefix(args[0], "-") {
-		fmt.Fprintln(os.Stderr, "usage: lorah task get <id> [--format=json|markdown]")
+	fs := flag.NewFlagSet("lorah task get", flag.ContinueOnError)
+	fs.Usage = func() {
+		fmt.Fprint(os.Stderr, `Usage: lorah task get <id> [flags...]
+
+Get full details for a task.
+
+Flags:
+      --format FORMAT    Output format: markdown (default), json
+  -h, --help             Show this help message
+`)
+	}
+	if len(args) == 0 || (strings.HasPrefix(args[0], "-") && args[0] != "--help" && args[0] != "-h") {
+		fs.Usage()
 		return 1
 	}
+	if args[0] == "--help" || args[0] == "-h" {
+		fs.Usage()
+		return 0
+	}
 	id := args[0]
-
-	fs := flag.NewFlagSet("lorah task get", flag.ContinueOnError)
 	format := fs.String("format", "markdown", "output format (markdown|json)")
 	if err := fs.Parse(args[1:]); err != nil {
+		if err == flag.ErrHelp {
+			return 0
+		}
 		return 1
 	}
 
@@ -159,6 +193,25 @@ func getCmd(args []string, w io.Writer, storage Storage) int {
 
 func createCmd(args []string, w io.Writer, storage Storage) int {
 	fs := flag.NewFlagSet("lorah task create", flag.ContinueOnError)
+	fs.Usage = func() {
+		fmt.Fprint(os.Stderr, `Usage: lorah task create [flags...]
+
+Create a new task.
+
+Flags:
+      --subject TEXT              Task subject (required)
+      --status STATUS             Task status: pending (default), in_progress, completed
+      --phase ID                  Existing phase ID
+      --phase-name TEXT           Phase name (creates new phase if --phase omitted)
+      --phase-description TEXT    Phase description
+      --section ID                Existing section ID
+      --section-name TEXT         Section name (creates new section if --section omitted)
+      --section-description TEXT  Section description
+      --project-name TEXT         Project name
+      --project-description TEXT  Project description
+  -h, --help                      Show this help message
+`)
+	}
 	subject := fs.String("subject", "", "task subject (required)")
 	status := fs.String("status", "pending", "task status")
 	phase := fs.String("phase", "", "existing phase ID")
@@ -170,6 +223,9 @@ func createCmd(args []string, w io.Writer, storage Storage) int {
 	projectName := fs.String("project-name", "", "project name")
 	projectDesc := fs.String("project-description", "", "project description")
 	if err := fs.Parse(args); err != nil {
+		if err == flag.ErrHelp {
+			return 0
+		}
 		return 1
 	}
 
@@ -304,13 +360,36 @@ func createCmd(args []string, w io.Writer, storage Storage) int {
 }
 
 func updateCmd(args []string, w io.Writer, storage Storage) int {
-	if len(args) == 0 || strings.HasPrefix(args[0], "-") {
-		fmt.Fprintln(os.Stderr, "usage: lorah task update <id> [flags...]")
+	fs := flag.NewFlagSet("lorah task update", flag.ContinueOnError)
+	fs.Usage = func() {
+		fmt.Fprint(os.Stderr, `Usage: lorah task update <id> [flags...]
+
+Update fields on an existing task (partial update).
+
+Flags:
+      --status STATUS             Task status: pending, in_progress, completed
+      --subject TEXT              Task subject
+      --notes TEXT                Task notes (replaces existing)
+      --phase ID                  Reassign to existing phase ID
+      --phase-name TEXT           Upsert name on phase (requires --phase)
+      --phase-description TEXT    Upsert description on phase (requires --phase)
+      --section ID                Reassign to existing section ID (requires --phase)
+      --section-name TEXT         Upsert name on section (requires --section)
+      --section-description TEXT  Upsert description on section (requires --section)
+      --project-name TEXT         Project name
+      --project-description TEXT  Project description
+  -h, --help                      Show this help message
+`)
+	}
+	if len(args) == 0 || (strings.HasPrefix(args[0], "-") && args[0] != "--help" && args[0] != "-h") {
+		fs.Usage()
 		return 1
 	}
+	if args[0] == "--help" || args[0] == "-h" {
+		fs.Usage()
+		return 0
+	}
 	id := args[0]
-
-	fs := flag.NewFlagSet("lorah task update", flag.ContinueOnError)
 	statusFlag := fs.String("status", "", "task status")
 	subjectFlag := fs.String("subject", "", "task subject")
 	notesFlag := fs.String("notes", "", "task notes")
@@ -323,6 +402,9 @@ func updateCmd(args []string, w io.Writer, storage Storage) int {
 	projectNameFlag := fs.String("project-name", "", "project name")
 	projectDescFlag := fs.String("project-description", "", "project description")
 	if err := fs.Parse(args[1:]); err != nil {
+		if err == flag.ErrHelp {
+			return 0
+		}
 		return 1
 	}
 
@@ -451,9 +533,22 @@ func updateCmd(args []string, w io.Writer, storage Storage) int {
 
 func deleteCmd(args []string, w io.Writer, storage Storage) int {
 	_ = w
-	if len(args) == 0 || strings.HasPrefix(args[0], "-") {
-		fmt.Fprintln(os.Stderr, "usage: lorah task delete <id>")
+	printUsage := func() {
+		fmt.Fprint(os.Stderr, `Usage: lorah task delete <id>
+
+Delete a task.
+
+Flags:
+  -h, --help    Show this help message
+`)
+	}
+	if len(args) == 0 || (strings.HasPrefix(args[0], "-") && args[0] != "--help" && args[0] != "-h") {
+		printUsage()
 		return 1
+	}
+	if args[0] == "--help" || args[0] == "-h" {
+		printUsage()
+		return 0
 	}
 	id := args[0]
 	if err := storage.Delete(id); err != nil {
@@ -465,10 +560,24 @@ func deleteCmd(args []string, w io.Writer, storage Storage) int {
 
 func exportCmd(args []string, w io.Writer, storage Storage) int {
 	fs := flag.NewFlagSet("lorah task export", flag.ContinueOnError)
+	fs.Usage = func() {
+		fmt.Fprint(os.Stderr, `Usage: lorah task export [flags...]
+
+Export tasks to markdown.
+
+Flags:
+      --status STATUS    Filter by status (repeatable): pending, in_progress, completed
+      --output FILE      Output file path (default stdout)
+  -h, --help             Show this help message
+`)
+	}
 	var statuses multiFlag
 	fs.Var(&statuses, "status", "filter by status (repeatable)")
 	output := fs.String("output", "", "output file path (default stdout)")
 	if err := fs.Parse(args); err != nil {
+		if err == flag.ErrHelp {
+			return 0
+		}
 		return 1
 	}
 

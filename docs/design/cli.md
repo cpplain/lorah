@@ -42,11 +42,11 @@ lorah [--dir=DIR] <command> [arguments]
 
 ### Top-Level Flags
 
-| Flag        | Short            | Description                             |
-| ----------- | ---------------- | --------------------------------------- |
-| `--dir`     |                  | Lorah data directory (default `.lorah`) |
-| `--version` | `-V`, `-version` | Print version and exit 0                |
-| `--help`    | `-h`, `-help`    | Show top-level usage and exit 0         |
+| Flag        | Short | Description                             |
+| ----------- | ----- | --------------------------------------- |
+| `--dir`     |       | Lorah data directory (default `.lorah`) |
+| `--version` | `-V`  | Print version and exit 0                |
+| `--help`    | `-h`  | Show top-level usage and exit 0         |
 
 `--version` and `--help` are only recognized as `os.Args[1]`. They are not parsed anywhere else. `--dir` is extracted from args before command dispatch and passed to the relevant command handler.
 
@@ -57,8 +57,8 @@ lorah [--dir=DIR] <command> [arguments]
 ### Routing Rules
 
 1. No arguments → print top-level usage, exit 1
-2. `--version`, `-version`, `-V` → print `lorah <version>`, exit 0
-3. `--help`, `-help`, `-h` → print top-level usage, exit 0
+2. `--version`, `-V` → print `lorah <version>`, exit 0
+3. `--help`, `-h` → print top-level usage, exit 0
 4. Extract `--dir`/`--dir=X` from remaining args; default `.lorah`
 5. `run` → dispatch to `runCmd` with remaining args
 6. `task` → dispatch to `taskCmd(dir, remainingArgs)`
@@ -172,7 +172,7 @@ func runCmd(args []string)
 ```
 
 1. If `len(args) == 0` → print run usage, exit 1
-2. If `args[0]` is `--help`, `-help`, or `-h` → print run usage, exit 0
+2. If `args[0]` is `--help` or `-h` → print run usage, exit 0
 3. `promptFile = args[0]`, `claudeFlags = args[1:]`
 4. Call `loop.Run(promptFile, claudeFlags)`
 
@@ -183,7 +183,7 @@ func taskCmd(dir string, args []string)
 ```
 
 1. If `len(args) == 0` → print task usage, exit 1
-2. If `args[0]` is `--help`, `-help`, or `-h` → print task usage, exit 0
+2. If `args[0]` is `--help` or `-h` → print task usage, exit 0
 3. Dispatch on `args[0]` (subcommand name) to the appropriate handler in `internal/task`
 4. Unknown subcommand → print `Unknown subcommand: <input>` + task usage to stderr, exit 1
 

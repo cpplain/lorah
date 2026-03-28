@@ -73,6 +73,12 @@ Specs define what a component does as observed from the outside — its inputs, 
 
 The exception is when an internal detail becomes a cross-boundary concern: shared data formats, storage schemas, or contracts that multiple components depend on. These must be specified because changing them affects more than one consumer. A useful test: if a test in a _different_ spec would assert on this detail, it is a cross-boundary contract and belongs in the spec. If it is consumed only within this component, it is an implementation decision.
 
+Examples:
+
+- Cross-boundary: "Tasks are persisted as a `TaskList` JSON object in `tasks.json` with the schema defined in §3." — Multiple specs depend on this format.
+- Not cross-boundary: "The router uses a switch statement to dispatch subcommands." — Only this spec's implementation cares.
+- Borderline: "The `Storage` interface defines `Load`, `Save`, `Get`, `List`, `Create`, `Update`, `Delete`." — Today only the JSON backend implements it, but the spec declares it as an abstraction point for future backends. Specify it now if the intent is to stabilize it for multiple consumers; leave it as an implementation detail if the interface is still in flux.
+
 ### Prescriptive tone
 
 Use present-tense declarative statements. "The CLI exits 1 on unknown command" — not "should exit" or "ideally exits." Hedging language creates ambiguity that agents cannot resolve. If the behavior is defined, state it as fact.
@@ -89,6 +95,8 @@ The difference between a testable spec and a vague one is concrete, observable v
   Precise: "Tool inputs with more than one line display the first line followed by `... +N lines` where N is the remaining line count."
 - Vague: "The system creates a default file if none exists."
   Precise: "If tasks.json does not exist on Load, return an empty TaskList with Version 1.0. Do not create the file on disk until the first Save."
+- Vague: "The system writes results to an output file."
+  Precise: "On successful completion, the command writes the result JSON to `{dir}/output.json` with 0644 permissions. If the file exists, it is overwritten atomically via write-to-temp-then-rename. If the directory does not exist, the command returns an error — it does not create parent directories."
 
 Each vague version reads as reasonable prose. Each precise version can be directly encoded as a test assertion. The gap between them is where implementations silently diverge from intent.
 

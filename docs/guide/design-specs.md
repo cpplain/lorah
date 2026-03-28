@@ -57,7 +57,7 @@ Use tables, code blocks, and subsections as the content demands.
 - Links to specs that interact with this one.
 ```
 
-**One spec per logical unit.** A logical unit is a behavioral domain that can be independently tested. Split specs by what a component _does_ — its observable behavior — not by file or package. If two behaviors can be tested without referencing each other, they belong in separate specs. If testing one requires understanding the other, they either belong together or need an explicit cross-reference.
+**One spec per logical unit.** A logical unit is a behavioral domain that can be tested in isolation. Split specs by what a component _does_ — its observable behavior — not by file or package. If two behaviors can be tested without referencing each other, they belong in separate specs. If testing one requires understanding the other, they either belong together or need an explicit cross-reference.
 
 **Cross-reference, do not duplicate.** When two specs interact, link between them. Duplicated content diverges over time, and agents cannot know which copy is authoritative.
 
@@ -71,7 +71,7 @@ These properties define what makes a spec effective. When properties conflict, p
 
 Specs define what a component does as observed from the outside — its inputs, outputs, error cases, and side effects. They do not prescribe internal implementation. How a function achieves its result is the implementer's decision, not the spec's.
 
-The exception is when an internal detail becomes a cross-boundary concern: shared data formats, storage schemas, or contracts that multiple components depend on. These must be specified because changing them affects more than one consumer.
+The exception is when an internal detail becomes a cross-boundary concern: shared data formats, storage schemas, or contracts that multiple components depend on. These must be specified because changing them affects more than one consumer. A useful test: if a test in a _different_ spec would assert on this detail, it is a cross-boundary contract and belongs in the spec. If it is consumed only within this component, it is an implementation decision.
 
 ### Prescriptive tone
 
@@ -124,7 +124,7 @@ This is the one area where conversational tone is appropriate in a spec. "Uses a
 
 ### Defined vocabulary
 
-Define terms once in a shared glossary and use them consistently. Agents treat synonyms as distinct concepts. If the glossary says "loop iteration," do not alternate with "cycle" or "run" elsewhere.
+Define terms once in a shared glossary and use them consistently. The glossary lives in `docs/design/README.md`. Agents treat synonyms as distinct concepts. If the glossary says "loop iteration," do not alternate with "cycle" or "run" elsewhere.
 
 ### Scannable structure
 
@@ -140,11 +140,15 @@ Maintain consistent structure across specs. When agents learn the pattern from o
 
 A spec is ready for implementation when all of these hold:
 
+- [ ] Does the spec define observable behavior without prescribing internal implementation?
 - [ ] Can you write a test assertion for every behavioral claim?
 - [ ] Are all inputs covered for empty, missing, and invalid cases?
 - [ ] Does every output have a defined format and error representation?
 - [ ] Are cross-boundary contracts identified and specified?
 - [ ] Do Non-Goals actively exclude the most likely scope creep?
 - [ ] Do 5–15 concrete examples exist and were they easy to write?
+- [ ] Does the spec use present-tense declarative statements without hedging?
+- [ ] Do non-obvious decisions include inline rationale?
+- [ ] Are terms defined in the glossary and used consistently?
 
 If any criterion fails, the spec needs more work. This is expected — specs tighten through iteration.

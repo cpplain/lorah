@@ -69,23 +69,17 @@ These properties define what makes a spec effective. When properties conflict, p
 
 ### Behavioral, not implementational
 
-Specs define what a component does as observed from the outside — its inputs, outputs, error cases, and side effects. They do not prescribe internal implementation. How a function achieves its result is the implementer's decision, not the spec's.
-
-The exception is when an internal detail becomes a cross-boundary concern: shared data formats, storage schemas, or contracts that multiple components depend on. These must be specified because changing them affects more than one consumer. A useful test: if a test in a _different_ spec would assert on this detail, it is a cross-boundary contract and belongs in the spec. If it is consumed only within this component, it is an implementation decision.
-
-Examples:
+Specs define what a component does as observed from the outside — its inputs, outputs, error cases, and side effects. They do not prescribe internal implementation. The exception is cross-boundary contracts: shared data formats, storage schemas, or contracts that multiple components depend on. A useful test: if a test in a _different_ spec would assert on this detail, it is a cross-boundary contract and belongs in the spec.
 
 - Cross-boundary: "Tasks are persisted as a `TaskList` JSON object in `tasks.json` with the schema defined in §3." — Multiple specs depend on this format.
 - Not cross-boundary: "The router uses a switch statement to dispatch subcommands." — Only this spec's implementation cares.
-- Borderline: "The `Storage` interface defines `Load`, `Save`, `Get`, `List`, `Create`, `Update`, `Delete`." — Today only the JSON backend implements it, but the spec declares it as an abstraction point for future backends. Specify it now if the intent is to stabilize it for multiple consumers; leave it as an implementation detail if the interface is still in flux.
+- Borderline: "The `Storage` interface defines `Load`, `Save`, `Get`, `List`, `Create`, `Update`, `Delete`." — Specify it now if the intent is to stabilize it for multiple consumers; leave it as an implementation detail if the interface is still in flux.
 
 ### Prescriptive tone
 
-Use present-tense declarative statements. "The CLI exits 1 on unknown command" — not "should exit" or "ideally exits." Hedging language creates ambiguity that agents cannot resolve. If the behavior is defined, state it as fact.
+Use present-tense declarative statements. "The CLI exits 1 on unknown command" — not "should exit" or "ideally exits."
 
 ### Testable
-
-Every behavioral claim in a spec should be verifiable by a test. If you cannot imagine the assertion, the spec is too vague. Prefer concrete values over abstract descriptions — "exits 1" is testable, "exits with an error code" is not.
 
 The difference between a testable spec and a vague one is concrete, observable values:
 
@@ -98,51 +92,27 @@ The difference between a testable spec and a vague one is concrete, observable v
 - Vague: "The system writes results to an output file."
   Precise: "On successful completion, the command writes the result JSON to `{dir}/output.json` with 0644 permissions. If the file exists, it is overwritten atomically via write-to-temp-then-rename. If the directory does not exist, the command returns an error — it does not create parent directories."
 
-Each vague version reads as reasonable prose. Each precise version can be directly encoded as a test assertion. The gap between them is where implementations silently diverge from intent.
-
 If a claim is hard to make precise, the behavior is underspecified — return to it and tighten it before moving on.
 
 ### Boundary-complete
 
-Every input has defined behavior for empty, missing, and invalid cases. Every output has a defined format and error representation. Unspecified edge cases become coin flips in implementation.
-
-Three categories of questions surface gaps:
-
-- **Boundary questions.** For each input: "What happens when this is empty? Missing? Malformed? The wrong type?" Walk every input systematically. Unasked boundary questions become unspecified edge cases.
-- **Interaction questions.** "What other components read or write this data? What breaks if this format changes?" These surface cross-boundary contracts — the shared schemas, storage formats, and data flows that must be specified because multiple consumers depend on them. Cross-boundary contracts are a common blind spot.
-- **Negative questions.** "What does this component explicitly not do?" These drive Non-Goals, which are frequently absent from first drafts. An engineer who says "it just handles routing" has implicit Non-Goals that need to be made explicit.
+Every input has defined behavior for empty, missing, and invalid cases. Every output has a defined format and error representation.
 
 ### Explicitly scoped
 
-Every spec needs Goals and Non-Goals. Goals define what to build. Non-Goals are equally important — they define what to not build, preventing scope creep and gold-plating. Non-Goals are active exclusions, not a "future work" list. They should exclude the most likely scope creep.
-
-### Concrete examples
-
-A rich examples section gives agents concrete input/output pairs to encode as test assertions. Five to fifteen examples per spec is typical. Skimping on examples forces agents to invent test cases, which means inventing behavior the spec did not define.
-
-Examples that are hard to write indicate underspecified behavior — the underlying behavioral section needs tightening.
+Every spec needs Goals and Non-Goals. Non-Goals are active exclusions, not a "future work" list.
 
 ### Decision rationale
 
-Agents make judgment calls at the edges of every spec. When they understand why a design choice was made, they make better decisions about cases the spec does not explicitly cover.
-
-Record why, not just what. A sentence of rationale per non-obvious decision prevents agents from optimizing away intentional constraints. Apply to non-obvious constraints and rejected alternatives — self-evident decisions don't need rationale. Keep the rationale inline, close to the decision it explains — not in a separate document the agent may not read.
-
-This is the one area where conversational tone is appropriate in a spec. "Uses a switch statement instead of a command registry because there are only two commands and simplicity outweighs extensibility" gives an agent the information it needs to preserve that choice.
+Record why, not just what. Apply to non-obvious constraints and rejected alternatives — self-evident decisions don't need rationale. Keep rationale inline, close to the decision it explains.
 
 ### Defined vocabulary
 
-Define terms once in a shared glossary and use them consistently. The glossary lives in `docs/design/README.md`. Agents treat synonyms as distinct concepts. If the glossary says "loop iteration," do not alternate with "cycle" or "run" elsewhere.
+Define terms once in `docs/design/README.md` and use them consistently. Agents treat synonyms as distinct concepts.
 
 ### Scannable structure
 
-Each spec uses numbered top-level sections with horizontal rule dividers. An agent working on a specific concern can jump to the relevant section without parsing everything above. Within sections:
-
-- Tables for reference data (flags, exit codes, field schemas, commands).
-- Code blocks for function signatures, JSON formats, and CLI invocations.
-- Subsection headings for distinct behavioral areas.
-
-Maintain consistent structure across specs. When agents learn the pattern from one spec, they can efficiently navigate all others.
+Each spec uses numbered top-level sections with horizontal rule dividers. Use tables for reference data, code blocks for formats, and subsection headings for distinct behavioral areas.
 
 ## Readiness Checklist
 

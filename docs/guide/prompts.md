@@ -1,3 +1,0 @@
-# Guide: Writing Prompts
-
-TODO

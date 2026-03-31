@@ -4,9 +4,16 @@ A `.lorah` directory contains the files that define a unit of work for the agent
 
 ```
 .lorah/
-├── plan.md          # scope and acceptance criteria
-├── prompt.md        # agent instructions for each iteration
-└── settings.json    # Claude Code CLI settings
+├── plan.md              # scope and acceptance criteria
+├── prompt.md            # orient + route to phase prompt
+├── prompts/
+│   ├── plan.md          # task selection
+│   ├── test.md          # write tests for selected task
+│   └── implement.md     # make tests pass
+├── tasks/
+│   ├── 01-<task>.md     # one file per task
+│   └── ...
+└── settings.json        # Claude Code CLI settings
 ```
 
 ## Plan file
@@ -21,20 +28,30 @@ A plan file contains:
 
 A plan file does not contain individual tasks. Task selection happens inside the loop, where each agent picks the next task based on current state.
 
-## Prompt file
+```markdown
+# <Project/Feature Name>
 
-The prompt file is a markdown file piped to Claude Code on each loop iteration. It defines the agent's role, workflow, and constraints. This is the primary lever for controlling agent behavior.
+## Scope
 
-A prompt file typically contains:
+What is being built — brief description and list of capabilities.
+Reference the design specs rather than duplicating them.
 
-- **Role** — what the agent is and what it does in one sentence.
-- **Workflow steps** — the sequence the agent follows each iteration: orient (check git history), select (pick next task), execute, verify, commit, exit.
-- **Rules** — hard constraints the agent must follow (e.g., one task per invocation, strict TDD boundary).
-- **Blocked workflow** — what to do when the agent encounters an issue it cannot resolve.
+## Boundaries
 
-The prompt does not need to be elaborate. Agents are capable of self-managing within clear constraints. Focus on boundaries and invariants rather than detailed instructions for every scenario.
+- Constraints and invariants that apply across the work.
 
-The prompt references the plan file for scope and the design specs for behavioral details. It should not duplicate either.
+## Acceptance Criteria
+
+- [ ] Concrete, verifiable conditions.
+```
+
+## Prompt files
+
+The prompt structure splits into a router prompt and phase-specific prompts. This keeps each agent's context small and focused. See the [prompt files guide](prompts.md) for templates.
+
+## Task files
+
+Each task gets its own file in `.lorah/tasks/`. The planning agent creates one task file per iteration; the testing and implementation agents update it as they work. See the [task files guide](tasks.md) for the template and status values.
 
 ## Settings
 
@@ -56,7 +73,7 @@ Common fields:
     "enabled": true,
     "autoAllowBashIfSandboxed": true
   },
-  "includeCoAuthoredBy": false
+  "attribution": { "commit": "", "pr": "" }
 }
 ```
 
@@ -64,7 +81,7 @@ Common fields:
 - **permissions** — `bypassPermissions` is typical for autonomous loops where no human is approving each action.
 - **sandbox** — enables sandboxed execution. `autoAllowBashIfSandboxed` avoids permission prompts for shell commands when sandboxing is on.
 
-See the [Claude Code documentation](https://docs.anthropic.com/en/docs/claude-code) for all available settings.
+See the [Claude Code settings reference](https://code.claude.com/docs/en/settings) for all available settings.
 
 ## Claude flags
 
@@ -80,3 +97,5 @@ Flags are passed through to the `claude` CLI unchanged. Common flags:
 - `--model <model>` — override the model (takes precedence over settings.json)
 - `--max-turns <n>` — limit the number of agent turns per iteration
 - `--allowedTools <tools>` — restrict which tools the agent can use
+
+See the [Claude Code CLI reference](https://code.claude.com/docs/en/cli-reference) for all available flags.

@@ -1,6 +1,6 @@
 # Guide: Writing Design Specs
 
-A design spec is a behavioral contract — it defines what the system does, not how to code it or how to use it. Specs are the single source of truth for their domain. If the spec and the code disagree, one of them has a bug. Specs are stable during execution — modifying a spec mid-loop invalidates the scope document, existing tests, and completed work derived from it. Changes happen between units of work, not during them. Specs are not tutorials, READMEs, API reference docs, or implementation plans.
+A design spec is a behavioral contract — it defines what the system does, not how to code it or how to use it. Specs are the foundation of the [incremental spec-driven workflow](workflow.md) and the single source of truth for their domain. If the spec and the code disagree, one of them has a bug. Specs are stable during execution — modifying a spec mid-loop invalidates the scope document, existing tests, and completed work derived from it. Changes happen between units of work, not during them. Specs are not tutorials, READMEs, API reference docs, or implementation plans.
 
 A spec emerges through iteration between an engineer and an agent. The engineer holds the intent; the agent drives the structure. The properties below guide each pass — they are not a checklist to complete once. How the engineer-agent pair reaches a spec that meets these properties is up to them.
 

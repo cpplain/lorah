@@ -1,6 +1,6 @@
 # Guide: Configuration
 
-A `.lorah` directory contains the files that define a unit of work for the agent loop. It sits at the project root by default (overridable with `--dir`).
+A `.lorah` directory contains the files that define a unit of work for the agent loop. It sits at the project root by default (overridable with `--dir`). Commit `.lorah/` to git — the workflow depends on git history for state and continuity, and task files are committed as part of the loop.
 
 ```
 .lorah/
@@ -80,6 +80,7 @@ Common fields:
 - **model** — which Claude model to use.
 - **permissions** — `bypassPermissions` is typical for autonomous loops where no human is approving each action.
 - **sandbox** — enables sandboxed execution. `autoAllowBashIfSandboxed` avoids permission prompts for shell commands when sandboxing is on.
+- **attribution** — text added to commit messages (as git trailers) and PR descriptions. Empty strings disable attribution; omitting the field uses Claude Code's defaults.
 
 See the [Claude Code settings reference](https://code.claude.com/docs/en/settings) for all available settings.
 

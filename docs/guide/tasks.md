@@ -6,7 +6,7 @@ Task files use sequential numbering as a prefix (e.g., `01-parse-cli-args.md`) t
 
 ```markdown
 ---
-status: pending
+status: in_progress
 ---
 
 # Task: <title>
@@ -41,7 +41,6 @@ needs.
 
 ## Status values
 
-- `pending` — created but not yet started.
 - `in_progress` — actively being worked by the current or most recent iteration.
 - `completed` — done. Tests pass, code is committed.
 - `blocked` — cannot proceed. See notes in Log for details.

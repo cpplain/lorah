@@ -38,7 +38,7 @@ Each iteration begins with an agent reviewing:
 - The plan file (boundaries and definition of done).
 - Current git state (what has already been built).
 
-Based on this, the agent identifies and documents the single next task to work on. It does not plan beyond the immediate next step.
+Based on this, the agent identifies and documents the single next task to work on. It does not plan beyond the immediate next step. If a prior task was marked `blocked`, the planning agent reassesses it first — revising the task to address the issue before moving on.
 
 This is where the workflow diverges from upfront planning. Instead of decomposing all work at the start, each task is chosen with full knowledge of what exists now. This means:
 
@@ -58,7 +58,7 @@ Test quality is the bottleneck of the entire workflow. If the tests are shallow 
 
 An agent writes code to pass the tests. It can see the tests, the specs, and the full git history. When the tests pass, it exits.
 
-If the implementation agent encounters an issue — an ambiguous spec, a flawed test, or a dependency it cannot resolve — it documents the issue in the plan file before exiting. The next task selection agent picks this up.
+If the implementation agent encounters an issue — an ambiguous spec, a flawed test, or a dependency it cannot resolve — it sets the task status to `blocked` with notes in the task's Log before exiting. The next iteration routes to the planning phase to reassess.
 
 ## Loop
 

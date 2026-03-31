@@ -1,4 +1,1 @@
-If you encounter something surprising or confusing in this project, flag it as a comment.
-
-- `make fmt`
-- `make lint`
+If you discover something non-obvious about this project, ask if it should be noted in CLAUDE.md.

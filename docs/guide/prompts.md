@@ -7,10 +7,9 @@ The prompt file is a markdown file piped to Claude Code on each loop iteration. 
 The main `prompt.md` orients the agent and routes it to the correct phase prompt. It is the only file piped to Claude Code — phase prompts are read by the agent during execution.
 
 ```markdown
-# <Role Title>
+# <Project Name>
 
-You are a <role> for the <project> project. Your job is to complete
-exactly one task per invocation.
+Complete exactly one task per invocation.
 
 ---
 
@@ -20,12 +19,13 @@ exactly one task per invocation.
    done in prior iterations.
 
 2. **Route** — Scan `.lorah/tasks/` for task files.
-   - If no task file has `status: in_progress`, read and follow
-     `.lorah/prompts/plan.md`.
+   - If a task has `status: blocked`, read its Log to understand the
+     issue, then read and follow `.lorah/prompts/plan.md`.
    - If a task has `status: in_progress` and no tests exist for it,
      read and follow `.lorah/prompts/test.md`.
    - If a task has `status: in_progress` and tests exist, read and
      follow `.lorah/prompts/implement.md`.
+   - Otherwise, read and follow `.lorah/prompts/plan.md`.
 
 3. **Exit** — Stop. Do not proceed to the next task.
 
@@ -53,12 +53,15 @@ Each phase prompt lives in `.lorah/prompts/` and defines the workflow for a sing
 2. Read the design specs in `docs/design/` for behavioral details.
 3. Review git history and completed tasks in `.lorah/tasks/` to
    understand what has been built.
-4. Identify the single next task — the smallest unit of work that
+4. Check for a blocked task in `.lorah/tasks/`. If one exists, read
+   its Log and revise the task to address the issue. Set status to
+   `in_progress`, add notes to the Log, and skip to step 7.
+5. Identify the single next task — the smallest unit of work that
    moves toward acceptance criteria.
-5. Create a new task file in `.lorah/tasks/` using the task file
+6. Create a new task file in `.lorah/tasks/` using the task file
    format. Set status to `in_progress`. Add planning notes to the
    Log.
-6. Commit the new task file.
+7. Commit.
 ```
 
 **`prompts/test.md`** — Write tests for the in-progress task.
@@ -97,12 +100,13 @@ and exit without committing test code.
 
 1. Read the in-progress task file in `.lorah/tasks/`.
 2. Read the tests written in the testing phase.
-3. Write production code to make the tests pass. Do not write new
+3. Read the relevant design spec section(s) referenced in the task.
+4. Write production code to make the tests pass. Do not write new
    tests.
-4. Verify: run the full test suite. All tests must pass.
-5. Update the task file: set status to `completed`, add
+5. Verify: run the full test suite. All tests must pass.
+6. Update the task file: set status to `completed`, add
    implementation notes to the Log.
-6. Commit.
+7. Commit.
 
 ## Blocked workflow
 
@@ -113,8 +117,8 @@ If the existing tests conflict with the design spec:
    conflict.
 3. Exit without committing.
 
-The next iteration will route back to the testing phase to fix the
-tests.
+The next iteration will route to the planning phase to reassess the
+task.
 ```
 
-The prompts above are starting points. Adapt the role, rules, and workflow steps to match your project. Focus on boundaries and invariants rather than detailed instructions for every scenario.
+The prompts above are starting points. Adapt the rules and workflow steps to match your project. Focus on boundaries and invariants rather than detailed instructions for every scenario.

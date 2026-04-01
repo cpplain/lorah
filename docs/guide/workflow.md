@@ -1,4 +1,4 @@
-# Workflow: Incremental Spec-Driven Development
+# Guide: Incremental Spec-Driven Development
 
 Lorah provides the loop. How you structure the work inside that loop is up to you. There are many valid approaches — this document presents one pattern that works well for spec-driven development.
 

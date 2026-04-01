@@ -19,7 +19,7 @@ Scope the work
 
 Each step is handled by a fresh agent. Agents maintain continuity through git history, the plan file, and task files — not shared memory.
 
-## Phase 1: Scope the work
+## Setup: Scope the work
 
 Before the loop begins, an agent reviews the design specs and produces a plan file. This is not a full task breakdown. It defines:
 
@@ -31,9 +31,9 @@ The plan file is the contract between the human and the agent loop. It should be
 
 This step runs once. The loop handles everything else.
 
-## Phase 2: Select the next task
+## Loop step 1: Select the next task
 
-Each iteration begins with an agent reviewing:
+Each iteration begins with an agent checking the plan file's definition of done against current state. If all acceptance criteria are met, the work is complete and the loop ends. Otherwise, the agent reviews:
 
 - The design specs (authoritative source of truth).
 - The plan file (boundaries and definition of done).
@@ -49,21 +49,17 @@ This is where the workflow diverges from upfront planning. Instead of decomposin
 
 The quality of task selection depends on the quality of the design specs. If the specs clearly define boundaries and behavior, the agent has a deterministic contract to work against. Ambiguity in specs propagates into ambiguity in task selection.
 
-## Phase 3: Write tests
+## Loop step 2: Write tests
 
 An agent writes tests for the selected task based on the design spec. The spec defines the intended behavior; the tests encode it as a verifiable contract between this agent and the implementation agent that follows. A passing test suite means the task is complete.
 
 Test quality is the bottleneck of the entire workflow. If the tests are shallow or misinterpret the spec, the implementation agent will write code that passes bad tests.
 
-## Phase 4: Implement
+## Loop step 3: Implement
 
 An agent writes code to pass the tests. It can see the tests, the specs, and the full git history. When the tests pass, it exits.
 
 If the implementation agent encounters an issue — an ambiguous spec, a flawed test, or a dependency it cannot resolve — it sets the task status to `blocked` with notes in the task's Log before exiting. The next iteration routes to the planning phase to reassess.
-
-## Loop
-
-Return to Phase 2. The task selection agent checks the plan file's definition of done against current state. If all acceptance criteria are met, the work is complete and the loop ends.
 
 ## Key properties
 

@@ -20,7 +20,7 @@ The `lorah` CLI wraps Claude Code to run the agent loop. It accepts a prompt fil
 
 ## Plan file
 
-The plan file is the output of the scoping step — [Phase 1](workflow.md#phase-1-scope-the-work) in the spec-driven workflow. It defines what is being built and what done looks like. The agent loop uses it as the contract between the human and the agents.
+The plan file is the output of the scoping step — [Setup](workflow.md#setup-scope-the-work) in the spec-driven workflow. It defines what is being built and what done looks like. The agent loop uses it as the contract between the human and the agents.
 
 A plan file contains:
 

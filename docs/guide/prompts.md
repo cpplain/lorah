@@ -18,7 +18,8 @@ Complete exactly one task per invocation.
 1. **Orient** — Run `git log --oneline -10` to understand what was
    done in prior iterations.
 
-2. **Route** — Scan `.lorah/tasks/` for task files.
+2. **Route** — Scan `.lorah/tasks/` for task files. At most one
+   task is non-completed at any time.
    - If a task has `status: blocked`, read its Log to understand the
      issue, then read and follow `.lorah/prompts/plan.md`.
    - If a task has `status: in_progress` and no tests exist for it,

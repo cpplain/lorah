@@ -1,6 +1,6 @@
 # Guide: Configuration
 
-A `.lorah` directory contains the files that define a unit of work for the agent loop. It sits at the project root by default (overridable with `--dir`). Commit `.lorah/` to git — the workflow depends on git history for state and continuity, and task files are committed as part of the loop.
+A `.lorah` directory contains the files that define a unit of work for the agent loop. It sits at the project root by default (overridable with Lorah's `--dir` flag). Commit `.lorah/` to git — the workflow depends on git history for state and continuity, and task files are committed as part of the loop.
 
 ```
 .lorah/
@@ -15,6 +15,8 @@ A `.lorah` directory contains the files that define a unit of work for the agent
 │   └── ...
 └── settings.json        # Claude Code CLI settings
 ```
+
+The `lorah` CLI wraps Claude Code to run the agent loop. It accepts a prompt file and forwards additional flags to `claude`.
 
 ## Plan file
 

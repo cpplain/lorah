@@ -44,3 +44,7 @@ needs.
 - `in_progress` — actively being worked by the current or most recent iteration.
 - `completed` — done. Tests pass, code is committed.
 - `blocked` — cannot proceed. See notes in Log for details.
+
+## Blocked task handling
+
+When the planning agent encounters a blocked task, it revises the existing task file — updating the Behavior, Acceptance Criteria, or Context as needed to address the issue noted in the Log. It sets status back to `in_progress` and adds notes to the Planning log explaining the revision. No new task file is created.

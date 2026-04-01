@@ -112,7 +112,7 @@ Record why, not just what. Apply to non-obvious constraints and rejected alterna
 
 ### Defined vocabulary
 
-Define terms once in a central glossary and use them consistently. Agents treat synonyms as distinct concepts.
+Define terms once in a central glossary — a shared file (e.g., `glossary.md`) or a section in the specs directory README — and use them consistently. Agents treat synonyms as distinct concepts.
 
 ### Scannable structure
 

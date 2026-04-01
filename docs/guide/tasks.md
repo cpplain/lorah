@@ -1,6 +1,6 @@
 # Guide: Task Files
 
-Each task gets its own file in `.lorah/tasks/`. The planning agent creates one task file per iteration; the testing and implementation agents update it as they work. This keeps context small — an agent only reads the task it is working on.
+Each task gets its own file in `.lorah/tasks/`. The planning agent creates one task file per iteration; the testing and implementation agents update it as they work. This keeps context small — an agent only reads the task it is working on. At most one task is non-completed at any time.
 
 Task files use sequential numbering as a prefix (e.g., `01-parse-cli-args.md`) to preserve ordering.
 

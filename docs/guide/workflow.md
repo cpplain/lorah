@@ -24,6 +24,7 @@ Each step is handled by a fresh agent. Agents maintain continuity through git hi
 Before the loop begins, an agent reviews the design specs and produces a plan file. This is not a full task breakdown. It defines:
 
 - **What is being built** — the boundaries of this unit of work.
+- **Constraints** — invariants and boundaries that apply across the work.
 - **What done looks like** — concrete, verifiable acceptance criteria.
 
 The plan file is the contract between the human and the agent loop. It should be specific enough that an agent can determine whether the work is complete by checking git state and test results. Avoid subjective criteria.

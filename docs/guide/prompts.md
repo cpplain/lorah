@@ -56,13 +56,16 @@ Each phase prompt lives in `.lorah/prompts/` and defines the workflow for a sing
    understand what has been built.
 4. Check for a blocked task in `.lorah/tasks/`. If one exists, read
    its Log and revise the task to address the issue. Set status to
-   `in_progress`, add notes to the Log, and skip to step 7.
-5. Identify the single next task — the smallest unit of work that
+   `in_progress`, add notes to the Log, and skip to step 8.
+5. Check the plan file's acceptance criteria against current git
+   state and test results. If all criteria are met, exit — the work
+   is complete.
+6. Identify the single next task — the smallest unit of work that
    moves toward acceptance criteria.
-6. Create a new task file in `.lorah/tasks/` using the task file
+7. Create a new task file in `.lorah/tasks/` using the task file
    format. Set status to `in_progress`. Add planning notes to the
    Log.
-7. Commit.
+8. Commit.
 ```
 
 **`prompts/test.md`** — Write tests for the in-progress task.
@@ -81,8 +84,8 @@ Each phase prompt lives in `.lorah/prompts/` and defines the workflow for a sing
 4. Verify: run the test suite. Failures are expected (no
    implementation yet), but panics and compilation errors must be
    fixed.
-5. Update the task file's Testing log with files created and edge
-   cases covered.
+5. Update the Testing section of the task file's Log with files
+   created and edge cases covered.
 6. Commit.
 
 ## Blocked workflow

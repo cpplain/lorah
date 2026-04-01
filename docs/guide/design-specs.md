@@ -2,7 +2,7 @@
 
 A design spec is a behavioral contract — it defines what the system does, not how to code it or how to use it. Specs are the foundation of the [incremental spec-driven workflow](workflow.md) and the single source of truth for their domain. If the spec and the code disagree, one of them has a bug.
 
-Specs are stable during execution — modifying a spec mid-loop invalidates the scope document, existing tests, and completed work derived from it. Changes happen between units of work, not during them.
+Specs are stable during execution — modifying a spec mid-loop invalidates the plan file, existing tests, and completed work derived from it. Changes happen between units of work, not during them.
 
 Specs are not tutorials, READMEs, API reference docs, or implementation plans.
 

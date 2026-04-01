@@ -17,7 +17,7 @@ Scope the work
         └─ Repeat until done
 ```
 
-Each step is handled by a fresh agent. Agents maintain continuity through git history and the plan file — not shared memory.
+Each step is handled by a fresh agent. Agents maintain continuity through git history, the plan file, and task files — not shared memory.
 
 ## Phase 1: Scope the work
 

@@ -22,11 +22,11 @@ Complete exactly one task per invocation.
    task is non-completed at any time.
    - If a task has `status: blocked`, read its Log to understand the
      issue, then read and follow `.lorah/prompts/plan.md`.
-   - If a task has `status: in_progress` and no tests exist for it,
-     read and follow `.lorah/prompts/test.md`.
-   - If a task has `status: in_progress` and tests exist, read and
-     follow `.lorah/prompts/implement.md`.
-   - Otherwise, read and follow `.lorah/prompts/plan.md`.
+   - Else if a task has `status: test`, read and follow
+     `.lorah/prompts/test.md`.
+   - Else if a task has `status: implement`, read and follow
+     `.lorah/prompts/implement.md`.
+   - Else, read and follow `.lorah/prompts/plan.md`.
 
 3. **Exit** — Stop. Do not proceed to the next task.
 
@@ -56,26 +56,30 @@ Each phase prompt lives in `.lorah/prompts/` and defines the workflow for a sing
    understand what has been built.
 4. Check for a blocked task in `.lorah/tasks/`. If one exists, read
    its Log and revise the task to address the issue. Set status to
-   `in_progress`, add notes to the Log, and skip to step 8.
+   `test` or `implement` (same criteria as step 7), add notes to the
+   Log, and skip to step 8.
 5. Check the plan file's acceptance criteria against current git
    state and test results. If all criteria are met, exit — the work
    is complete.
 6. Identify the single next task — the smallest unit of work that
    moves toward acceptance criteria.
 7. Create a new task file in `.lorah/tasks/` using the task file
-   format. Set status to `in_progress`. Add planning notes to the
-   Log.
+   format. Set the task status based on whether it has testable
+   behavior: `test` if it implements logic or behavior that benefits
+   from test-first development; `implement` if it is pure
+   configuration or scaffolding with no behavioral logic to test. Add
+   planning notes to the Log.
 8. Commit.
 ```
 
-**`prompts/test.md`** — Write tests for the in-progress task.
+**`prompts/test.md`** — Write tests for the current task.
 
 ```markdown
 # Testing Phase
 
 ## Workflow
 
-1. Read the in-progress task file in `.lorah/tasks/`.
+1. Read the current task file in `.lorah/tasks/`.
 2. Read the relevant design spec section(s) referenced in the task.
 3. Write tests that verify the behavior described in the task's
    acceptance criteria. Do not write any production code. Add stubs
@@ -86,7 +90,8 @@ Each phase prompt lives in `.lorah/prompts/` and defines the workflow for a sing
    fixed.
 5. Update the Testing section of the task file's Log with files
    created and edge cases covered.
-6. Commit.
+6. Update the task status from `test` to `implement`.
+7. Commit.
 
 ## Blocked workflow
 
@@ -95,19 +100,21 @@ note to the task file explaining the issue, set status to `blocked`,
 and exit without committing test code.
 ```
 
-**`prompts/implement.md`** — Make the tests pass.
+**`prompts/implement.md`** — Write production code to satisfy the task.
 
 ```markdown
 # Implementation Phase
 
 ## Workflow
 
-1. Read the in-progress task file in `.lorah/tasks/`.
-2. Read the tests written in the testing phase.
-3. Read the relevant design spec section(s) referenced in the task.
-4. Write production code to make the tests pass. Do not write new
-   tests.
-5. Verify: run the full test suite. All tests must pass.
+1. Read the current task file in `.lorah/tasks/`.
+2. Read the relevant design spec section(s) referenced in the task.
+3. If tests were written in the testing phase, read them.
+4. Write production code to satisfy the acceptance criteria (and
+   make tests pass, if they exist). Do not write new tests.
+5. Verify: if tests exist, run the full test suite — all tests must
+   pass. Otherwise, verify acceptance criteria directly (e.g., run
+   commands, check file contents).
 6. Update the task file: set status to `completed`, add
    implementation notes to the Log.
 7. Commit.

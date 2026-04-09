@@ -6,8 +6,10 @@ Task files use sequential numbering as a prefix (e.g., `01-parse-cli-args.md`) t
 
 ```markdown
 ---
-status: in_progress
+status: test
 ---
+
+<!-- Valid statuses: test | implement | blocked | completed -->
 
 # Task: <title>
 
@@ -41,10 +43,11 @@ needs.
 
 ## Status values
 
-- `in_progress` — actively being worked by the current or most recent iteration.
-- `completed` — done. Tests pass, code is committed.
+- `test` — has testable behavior; next iteration writes tests.
+- `implement` — no testable behavior (pure config/scaffolding), or tests are written and next iteration writes production code.
 - `blocked` — cannot proceed. See notes in Log for details.
+- `completed` — done. Tests pass (if any), code is committed.
 
 ## Blocked task handling
 
-When the planning agent encounters a blocked task, it revises the existing task file — updating the Behavior, Acceptance Criteria, or Context as needed to address the issue noted in the Log. It sets status back to `in_progress` and adds notes to the Planning log explaining the revision. No new task file is created.
+When the planning agent encounters a blocked task, it revises the existing task file — updating the Behavior, Acceptance Criteria, or Context as needed to address the issue noted in the Log. It sets status to `test` or `implement` based on whether the revised task has testable behavior, and adds notes to the Planning log explaining the revision. No new task file is created.

@@ -7,11 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-04-08
+
+### Added
+
+- SDD (spec-driven development) workflow guides under `docs/guide/` covering workflow, configuration, design, prompts, specs, and tasks, plus a matching router-style example under `examples/.lorah/` and example design specs under `examples/docs/design/`.
+
+### Changed
+
+- `lorah --help`/`-h` now prints usage to stdout; usage on error still prints to stderr.
+
 ### Removed
 
 - **BREAKING**: `lorah task` command and `internal/task` package. Track tasks as markdown files in `.lorah/tasks/` instead (see `docs/guide/tasks.md`).
 - **BREAKING**: `--dir` top-level flag (was only used by `task`).
 - **BREAKING**: `run` subcommand. CLI is now `lorah <prompt-file> [claude-flags...]`, matching the pre-0.5.0 shape.
+
+### Fixed
+
+- A single Ctrl+C now finishes the current iteration naturally instead of interrupting the running claude subprocess. The subprocess is placed in its own process group (`Setpgid`) so terminal SIGINT is delivered only to lorah.
 
 ## [0.6.0] - 2026-03-24
 
@@ -113,7 +127,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Configuration JSON schema accessible via `lorah info schema`
 - Single self-contained binary with no external runtime dependencies
 
-[unreleased]: https://github.com/cpplain/lorah/compare/v0.6.0...HEAD
+[unreleased]: https://github.com/cpplain/lorah/compare/v0.7.0...HEAD
+[0.7.0]: https://github.com/cpplain/lorah/compare/v0.6.0...v0.7.0
 [0.6.0]: https://github.com/cpplain/lorah/compare/v0.5.0...v0.6.0
 [0.5.0]: https://github.com/cpplain/lorah/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/cpplain/lorah/compare/v0.3.0...v0.4.0

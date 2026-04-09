@@ -134,3 +134,7 @@ A spec is ready for implementation when all of these hold:
 - [ ] Are terms defined in the glossary and used consistently?
 
 If any criterion fails, the spec needs more work. This is expected — specs tighten through iteration.
+
+## Example
+
+A worked example of a feature spec applying these properties is in [`examples/docs/design/features/auth.md`](../../examples/docs/design/features/auth.md).

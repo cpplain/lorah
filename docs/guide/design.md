@@ -86,3 +86,7 @@ The [specs guide](specs.md) covers the "Defined vocabulary" property — terms d
 ## Relationship to the workflow
 
 In the [spec-driven workflow](workflow.md), the planning agent navigates from the README index to the relevant foundation and feature specs to understand what needs to be built. The quality of the design directory — clear categorization, accurate descriptions, complete specs — directly determines the quality of agent output.
+
+## Example
+
+A complete working example of this directory structure is in [`examples/docs/design/`](../../examples/docs/design/).

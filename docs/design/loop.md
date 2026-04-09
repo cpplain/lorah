@@ -70,9 +70,10 @@ func Run(promptFile string, claudeFlags []string)
 1. No arguments → print top-level usage, exit 1
 2. `args[0]` is `--version`, `-version`, or `-V` → print `lorah <version>`, exit 0
 3. `args[0]` is `--help`, `-help`, or `-h` → print top-level usage, exit 0
-4. Otherwise → `loop.Run(args[0], args[1:])`
+4. `args[0]` begins with `-` and did not match rules 2 or 3 → print `Unknown flag: <arg>` followed by top-level usage, exit 1
+5. Otherwise → `loop.Run(args[0], args[1:])`
 
-Any `args[0]` not matching a recognized flag is treated as a prompt file path. If the
+Any `args[0]` that does not begin with `-` is treated as a prompt file path. If the
 file cannot be opened, `loop.runClaude` returns an error and the loop's normal error
 recovery applies (see §4).
 
@@ -114,7 +115,7 @@ Flags:
 var Version = "dev"
 
 func main()         // os.Exit(route(os.Args[1:], Version, loop.Run))
-func route(...)     // the 4 routing rules above
+func route(...)     // the 5 routing rules above
 func printUsage()   // top-level help text
 ```
 
@@ -252,7 +253,7 @@ Each example is an invocation or event followed by the observable outcome.
 
 Input: `lorah`
 
-Outcome: Top-level usage printed to stdout. Process exits 1.
+Outcome: Top-level usage printed to stderr. Process exits 1.
 
 ### 2. Version flag
 
@@ -306,7 +307,7 @@ Outcome: Prints blank line, then `Received second interrupt, shutting down...`. 
 
 Input: `lorah --nope`
 
-Outcome: `args[0]` does not match `--version` or `--help`, so it is treated as a prompt file path. `loop.Run("--nope", [])` is called, `runClaude` fails to open `--nope`, and normal error recovery applies (see example 6).
+Outcome: `args[0]` begins with `-` but matches neither `--version` nor `--help`. Prints `Unknown flag: --nope` followed by top-level usage to stderr. Process exits 1.
 
 ### 11. Version injected at build time
 

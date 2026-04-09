@@ -1,44 +1,28 @@
 // Lorah - Simple infinite loop harness for Claude Code
 //
-// Usage: lorah <command> [arguments]
+// Usage: lorah <prompt-file> [claude-flags...]
 //
 // Runs Claude Code CLI in a continuous loop with formatted output.
 package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"strings"
 
 	"github.com/cpplain/lorah/internal/loop"
-	"github.com/cpplain/lorah/internal/task"
 )
 
 // Version is set via ldflags during build. Default is "dev" for local builds.
 var Version = "dev"
 
-func printUsage() {
-	fmt.Fprint(os.Stderr, `Usage: lorah [--dir=DIR] <command> [arguments]
+func printUsage(w io.Writer) {
+	fmt.Fprint(w, `Usage: lorah <prompt-file> [claude-flags...]
 
 Simple infinite-loop harness for Claude Code.
 
-Commands:
-  run     Run Claude Code CLI in an infinite loop
-  task    Manage tasks
-
-Flags:
-      --dir        Lorah data directory (default .lorah)
-  -V, --version    Print version and exit
-  -h, --help       Show this help message
-
-Run 'lorah <command> --help' for command-specific help.
-`)
-}
-
-func printRunUsage() {
-	fmt.Fprint(os.Stderr, `Usage: lorah run <prompt-file> [claude-flags...]
-
-Run Claude Code CLI in a continuous loop with formatted output.
+Runs Claude Code CLI in a continuous loop with formatted output.
 Retries automatically on error with a 5-second delay.
 
 Arguments:
@@ -46,39 +30,21 @@ Arguments:
   [claude-flags...]  Flags passed directly to claude CLI
 
 Examples:
-  lorah run prompt.md
-  lorah run task.txt --settings .lorah/settings.json
-  lorah run instructions.md --model claude-opus-4-6 --max-turns 50
+  lorah prompt.md
+  lorah prompt.md --settings .lorah/settings.json
+  lorah prompt.md --model claude-opus-4-6 --max-turns 50
 
 Flags:
-  -h, --help    Show this help message
-`)
-}
-
-func printTaskUsage() {
-	fmt.Fprint(os.Stderr, `Usage: lorah task <subcommand> [args...] [flags...]
-
-Manage tasks stored in .lorah/tasks.json.
-
-Subcommands:
-  list        List tasks
-  get         Get task details
-  create      Create a new task
-  update      Update a task
-  delete      Delete a task
-  export      Export tasks to markdown
-
-Flags:
-  -h, --help    Show this help message
-
-Run 'lorah task <subcommand> --help' for subcommand-specific help.
+  -V, --version    Print version and exit
+  -h, --help       Show this help message
 `)
 }
 
 // route dispatches CLI arguments to the appropriate handler and returns an exit code.
-func route(args []string, version string, runFn func(string, []string), taskFn func(string, []string) error) int {
+// Implements the routing rules in docs/design/loop.md §3.
+func route(args []string, version string, runFn func(string, []string)) int {
 	if len(args) == 0 {
-		printUsage()
+		printUsage(os.Stderr)
 		return 1
 	}
 
@@ -88,84 +54,20 @@ func route(args []string, version string, runFn func(string, []string), taskFn f
 		return 0
 
 	case "--help", "-help", "-h":
-		printUsage()
+		printUsage(os.Stdout)
 		return 0
 	}
 
-	// Extract --dir before command dispatch.
-	dir := ".lorah"
-	var remaining []string
-	for i := 0; i < len(args); i++ {
-		if args[i] == "--dir" && i+1 < len(args) {
-			dir = args[i+1]
-			i++
-		} else if strings.HasPrefix(args[i], "--dir=") {
-			dir = strings.TrimPrefix(args[i], "--dir=")
-		} else {
-			remaining = append(remaining, args[i])
-		}
-	}
-
-	if len(remaining) == 0 {
-		printUsage()
+	if strings.HasPrefix(args[0], "-") {
+		fmt.Fprintf(os.Stderr, "Unknown flag: %s\n", args[0])
+		printUsage(os.Stderr)
 		return 1
 	}
 
-	switch remaining[0] {
-	case "run":
-		runArgs := remaining[1:]
-		if len(runArgs) == 0 {
-			printRunUsage()
-			return 1
-		}
-		if runArgs[0] == "--help" || runArgs[0] == "-help" || runArgs[0] == "-h" {
-			printRunUsage()
-			return 0
-		}
-		promptFile := runArgs[0]
-		claudeFlags := runArgs[1:]
-		runFn(promptFile, claudeFlags)
-		return 0
-
-	case "task":
-		taskArgs := remaining[1:]
-		if len(taskArgs) == 0 {
-			printTaskUsage()
-			return 1
-		}
-		if taskArgs[0] == "--help" || taskArgs[0] == "-help" || taskArgs[0] == "-h" {
-			printTaskUsage()
-			return 0
-		}
-		if err := taskFn(dir, taskArgs); err != nil {
-			fmt.Fprintf(os.Stderr, "%v\n", err)
-			return 1
-		}
-		return 0
-
-	default:
-		fmt.Fprintf(os.Stderr, "Unknown command: %s\n", remaining[0])
-		printUsage()
-		return 1
-	}
-}
-
-func runCmd(promptFile string, claudeFlags []string) {
-	loop.Run(promptFile, claudeFlags)
-}
-
-func taskCmd(dir string, args []string) error {
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return fmt.Errorf("creating storage directory: %w", err)
-	}
-	storage := task.NewJSONStorage(dir)
-	code := task.HandleTask(args, os.Stdout, storage)
-	if code != 0 {
-		return fmt.Errorf("task command failed")
-	}
-	return nil
+	runFn(args[0], args[1:])
+	return 0
 }
 
 func main() {
-	os.Exit(route(os.Args[1:], Version, runCmd, taskCmd))
+	os.Exit(route(os.Args[1:], Version, loop.Run))
 }

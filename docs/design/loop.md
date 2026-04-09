@@ -246,29 +246,79 @@ Splitting further would require exporting symbols with no reason to be public.
 
 ## 8. Examples
 
-```sh
-# Basic usage
-lorah prompt.md
+Each example is an invocation or event followed by the observable outcome.
 
-# With Claude settings file
-lorah prompt.md --settings .lorah/settings.json
+### 1. No arguments
 
-# With specific model and turn limit
-lorah prompt.md --model claude-opus-4-6 --max-turns 50
+Input: `lorah`
 
-# With multiple flags
-lorah prompt.md --settings settings.json --model claude-opus-4-6 --verbose
+Outcome: Top-level usage printed to stdout. Process exits 1.
 
-# Version and help
-lorah --version
-lorah --help
+### 2. Version flag
 
-# Error cases
-lorah                      # shows usage, exits 1
+Input: `lorah --version` (also `-V`, `-version`)
 
-# First Ctrl+C → prints "Received interrupt, stopping after current loop...", exits 0 after iteration
-# Second Ctrl+C → prints "Received second interrupt, shutting down...", exits 0 immediately
-```
+Outcome: Prints `lorah <version>` to stdout. Process exits 0.
+
+### 3. Help flag
+
+Input: `lorah --help` (also `-h`, `-help`)
+
+Outcome: Top-level usage printed to stdout. Process exits 0.
+
+### 4. Basic loop
+
+Input: `lorah prompt.md`
+
+Outcome: `loop.Run("prompt.md", [])` begins iterating. Each iteration prints `Starting loop N...`, pipes `prompt.md` to `claude -p --output-format stream-json --verbose`, prints `Loop N completed successfully` on success, and proceeds immediately to the next iteration.
+
+### 5. Flag passthrough
+
+Input: `lorah prompt.md --model claude-opus-4-6 --max-turns 50`
+
+Outcome: `loop.Run("prompt.md", ["--model", "claude-opus-4-6", "--max-turns", "50"])`. The subprocess argv is `claude -p --output-format stream-json --verbose --model claude-opus-4-6 --max-turns 50`.
+
+### 6. Missing prompt file
+
+Input: `lorah missing.md`
+
+Outcome: `runClaude` returns `opening prompt file: open missing.md: no such file or directory`. An error section is printed to stderr, followed by `Retrying in 5s...`. The loop sleeps 5s and retries — the same error repeats until the file appears or the process is interrupted.
+
+### 7. Subprocess non-zero exit
+
+Input: `claude` subprocess exits with code 2 mid-iteration.
+
+Outcome: `cmd.Wait()` returns an error. The error section `Claude Code CLI exited with error: exit status 2` is printed to stderr. The loop sleeps 5s and retries.
+
+### 8. First interrupt during iteration
+
+Input: Ctrl+C while a `claude` subprocess is running.
+
+Outcome: Prints blank line, then `Received interrupt, stopping after current loop...`. The subprocess continues to completion (context is not cancelled). After the iteration finishes, the loop checks the `stopping` flag and calls `os.Exit(0)`.
+
+### 9. Second interrupt during iteration
+
+Input: Ctrl+C a second time while the subprocess is still running from example 8.
+
+Outcome: Prints blank line, then `Received second interrupt, shutting down...`. `cancel()` is called to signal any running subprocess, and `os.Exit(0)` is called immediately.
+
+### 10. Unknown flag as first argument
+
+Input: `lorah --nope`
+
+Outcome: `args[0]` does not match `--version` or `--help`, so it is treated as a prompt file path. `loop.Run("--nope", [])` is called, `runClaude` fails to open `--nope`, and normal error recovery applies (see example 6).
+
+### 11. Version injected at build time
+
+Input: Binary built with `-ldflags '-X main.Version=0.6.0'`, then `lorah --version`.
+
+Outcome: Prints `lorah 0.6.0` to stdout. Process exits 0.
+
+### 12. Successful iteration
+
+Input: `lorah prompt.md` with a valid prompt and a `claude` subprocess that completes normally.
+
+Outcome: Iteration N prints `Starting loop N...`, streams formatted output from `printMessages`, prints `Loop N completed successfully`, and begins iteration N+1 with no delay.
 
 ---
 

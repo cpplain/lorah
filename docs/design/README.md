@@ -1,8 +1,10 @@
-# Lorah Specifications
+# Lorah — Design Specifications
 
 Design documentation for `lorah`, a simple infinite-loop harness for Claude Code.
 
-## Index
+## Foundation
+
+Read these first. They define the harness's behavior end-to-end.
 
 | Spec                   | Description                                                              |
 | ---------------------- | ------------------------------------------------------------------------ |

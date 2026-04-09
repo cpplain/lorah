@@ -186,11 +186,206 @@ const (
 
 These constants are package-level in `internal/loop/constants.go` and shared
 across `loop.go`, `claude.go`, and `output.go`. `retryDelay` is also defined
-in `constants.go` but is a loop concern — see [run.md](run.md).
+in `constants.go` but is a loop concern — see [loop.md](loop.md).
 
 ---
 
-## 8. Related Specifications
+## 8. Examples
 
-- [run.md](run.md) — loop lifecycle that drives `printMessages` and status messages
-- [cli.md](cli.md) — CLI structure and entry point
+Each example is one line of stream-JSON input followed by the observable output. Unknown types, malformed JSON, and non-error results produce no output at all.
+
+### 1. Assistant text block
+
+Input:
+
+```json
+{
+  "type": "assistant",
+  "message": { "content": [{ "type": "text", "text": "Reading the file." }] }
+}
+```
+
+Output (the icon is uncolored because `printSection` is called with an empty color argument):
+
+```
+⏺ <bold>Claude<reset>
+Reading the file.
+
+```
+
+### 2. Assistant thinking block
+
+Input:
+
+```json
+{
+  "type": "assistant",
+  "message": {
+    "content": [{ "type": "thinking", "thinking": "The user wants..." }]
+  }
+}
+```
+
+Output:
+
+```
+⏺ <bold>Claude (thinking)<reset>
+The user wants...
+
+```
+
+### 3. Tool use: Bash
+
+Input:
+
+```json
+{
+  "type": "assistant",
+  "message": {
+    "content": [
+      {
+        "type": "tool_use",
+        "name": "Bash",
+        "input": { "command": "go test ./..." }
+      }
+    ]
+  }
+}
+```
+
+Output:
+
+```
+<green>⏺<reset> <bold>Bash<reset>
+go test ./...
+
+```
+
+### 4. Tool use: Read (single-line path)
+
+Input:
+
+```json
+{
+  "type": "assistant",
+  "message": {
+    "content": [
+      {
+        "type": "tool_use",
+        "name": "Read",
+        "input": { "file_path": "internal/loop/loop.go" }
+      }
+    ]
+  }
+}
+```
+
+Output:
+
+```
+<green>⏺<reset> <bold>Read<reset>
+internal/loop/loop.go
+
+```
+
+### 5. Tool use: Bash with multi-line command (truncated)
+
+Input:
+
+```json
+{
+  "type": "assistant",
+  "message": {
+    "content": [
+      {
+        "type": "tool_use",
+        "name": "Bash",
+        "input": { "command": "set -e\ngo build ./...\ngo test ./..." }
+      }
+    ]
+  }
+}
+```
+
+Output:
+
+```
+<green>⏺<reset> <bold>Bash<reset>
+set -e
+... +2 lines
+
+```
+
+### 6. Tool use: unmapped tool name
+
+Input:
+
+```json
+{
+  "type": "assistant",
+  "message": {
+    "content": [
+      { "type": "tool_use", "name": "Unknown", "input": { "foo": "bar" } }
+    ]
+  }
+}
+```
+
+Output:
+
+```
+<green>⏺<reset> <bold>Unknown<reset>
+
+```
+
+### 7. Result message with error
+
+Input:
+
+```json
+{ "type": "result", "is_error": true, "result": "command failed: exit 1" }
+```
+
+Output:
+
+```
+<red>⏺<reset> <bold>Result (error)<reset>
+command failed: exit 1
+
+```
+
+### 8. Result message without error
+
+Input:
+
+```json
+{ "type": "result", "is_error": false, "result": "ok" }
+```
+
+Output: _(nothing — silently skipped)_
+
+### 9. Unknown top-level message type
+
+Input:
+
+```json
+{ "type": "system", "message": "ignored" }
+```
+
+Output: _(nothing — silently skipped)_
+
+### 10. Malformed JSON line
+
+Input:
+
+```
+not valid json
+```
+
+Output: _(nothing — silently skipped, scanner continues to the next line)_
+
+---
+
+## 9. Related Specifications
+
+- [loop.md](loop.md) — loop lifecycle that drives `printMessages`, CLI structure and entry point

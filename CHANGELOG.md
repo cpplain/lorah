@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Removed
+
+- **BREAKING**: `lorah task` command and `internal/task` package. Track tasks as markdown files in `.lorah/tasks/` instead (see `docs/guide/tasks.md`).
+- **BREAKING**: `--dir` top-level flag (was only used by `task`).
+- **BREAKING**: `run` subcommand. CLI is now `lorah <prompt-file> [claude-flags...]`, matching the pre-0.5.0 shape.
+
 ## [0.6.0] - 2026-03-24
 
 ### Added

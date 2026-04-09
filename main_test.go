@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -38,8 +36,8 @@ func TestRoute_Version(t *testing.T) {
 	for _, flag := range []string{"--version", "-version", "-V"} {
 		t.Run(flag, func(t *testing.T) {
 			var code int
-			stdout, _ := captureOutput(func() {
-				code = route([]string{flag}, "1.2.3", nil, nil)
+			stdout, stderr := captureOutput(func() {
+				code = route([]string{flag}, "1.2.3", nil)
 			})
 			if code != 0 {
 				t.Errorf("expected exit 0, got %d", code)
@@ -47,33 +45,41 @@ func TestRoute_Version(t *testing.T) {
 			if !strings.Contains(stdout, "lorah 1.2.3") {
 				t.Errorf("expected %q in stdout, got %q", "lorah 1.2.3", stdout)
 			}
+			if stderr != "" {
+				t.Errorf("expected empty stderr, got %q", stderr)
+			}
 		})
 	}
 }
 
+// TestRoute_Help verifies that --help prints usage to stdout per UNIX
+// convention (an explicit documentation request is not an error).
 func TestRoute_Help(t *testing.T) {
 	for _, flag := range []string{"--help", "-help", "-h"} {
 		t.Run(flag, func(t *testing.T) {
 			var code int
-			_, stderr := captureOutput(func() {
-				code = route([]string{flag}, "dev", nil, nil)
+			stdout, stderr := captureOutput(func() {
+				code = route([]string{flag}, "dev", nil)
 			})
 			if code != 0 {
 				t.Errorf("expected exit 0, got %d", code)
 			}
-			if !strings.Contains(stderr, "Usage:") {
-				t.Errorf("expected usage in stderr, got %q", stderr)
+			if !strings.Contains(stdout, "Usage:") {
+				t.Errorf("expected usage in stdout, got %q", stdout)
+			}
+			if stderr != "" {
+				t.Errorf("expected empty stderr, got %q", stderr)
 			}
 		})
 	}
 }
 
 // TestRoute_NoArgs verifies that no arguments prints usage to stderr and exits 1.
-// This is distinct from --help which exits 0 (per cli.md §3).
+// This is distinct from --help which exits 0 (per loop.md §3).
 func TestRoute_NoArgs(t *testing.T) {
 	var code int
 	_, stderr := captureOutput(func() {
-		code = route([]string{}, "dev", nil, nil)
+		code = route([]string{}, "dev", nil)
 	})
 	if code != 1 {
 		t.Errorf("expected exit 1, got %d", code)
@@ -83,7 +89,10 @@ func TestRoute_NoArgs(t *testing.T) {
 	}
 }
 
-func TestRoute_Run(t *testing.T) {
+// TestRoute_PromptFile verifies that a non-flag first argument is passed to
+// runFn as the prompt file, with remaining args passed through as claude flags
+// (loop.md §3 rule 5).
+func TestRoute_PromptFile(t *testing.T) {
 	var calledFile string
 	var calledFlags []string
 	runFn := func(file string, flags []string) {
@@ -91,7 +100,7 @@ func TestRoute_Run(t *testing.T) {
 		calledFlags = flags
 	}
 
-	code := route([]string{"run", "prompt.md", "--max-turns", "50"}, "dev", runFn, nil)
+	code := route([]string{"prompt.md", "--max-turns", "50"}, "dev", runFn)
 	if code != 0 {
 		t.Errorf("expected exit 0, got %d", code)
 	}
@@ -103,90 +112,20 @@ func TestRoute_Run(t *testing.T) {
 	}
 }
 
-func TestRoute_Task(t *testing.T) {
-	var calledDir string
-	var calledArgs []string
-	taskFn := func(dir string, args []string) error {
-		calledDir = dir
-		calledArgs = args
-		return nil
-	}
-
-	code := route([]string{"task", "list"}, "dev", nil, taskFn)
-	if code != 0 {
-		t.Errorf("expected exit 0, got %d", code)
-	}
-	if calledDir != ".lorah" {
-		t.Errorf("expected default dir %q, got %q", ".lorah", calledDir)
-	}
-	if len(calledArgs) != 1 || calledArgs[0] != "list" {
-		t.Errorf("unexpected args: %v", calledArgs)
-	}
-}
-
-func TestRoute_DirFlag(t *testing.T) {
-	dataDir := t.TempDir()
-	var cmdErr error
-	captureOutput(func() {
-		err := route([]string{"--dir=" + dataDir, "task", "create", "--subject=test"}, "dev", nil, taskCmd)
-		if err != 0 {
-			cmdErr = fmt.Errorf("exit %d", err)
-		}
-	})
-	if cmdErr != nil {
-		t.Errorf("unexpected error: %v", cmdErr)
-	}
-	if _, err := os.Stat(filepath.Join(dataDir, "tasks.json")); err != nil {
-		t.Errorf("expected tasks.json in %s, got %v", dataDir, err)
-	}
-}
-
-func TestRoute_DirFlagSpaceSeparated(t *testing.T) {
-	dataDir := t.TempDir()
-	var cmdErr error
-	captureOutput(func() {
-		err := route([]string{"--dir", dataDir, "task", "create", "--subject=test"}, "dev", nil, taskCmd)
-		if err != 0 {
-			cmdErr = fmt.Errorf("exit %d", err)
-		}
-	})
-	if cmdErr != nil {
-		t.Errorf("unexpected error: %v", cmdErr)
-	}
-	if _, err := os.Stat(filepath.Join(dataDir, "tasks.json")); err != nil {
-		t.Errorf("expected tasks.json in %s, got %v", dataDir, err)
-	}
-}
-
-func TestRoute_DefaultDir(t *testing.T) {
-	orig, err := os.Getwd()
-	if err != nil {
-		t.Fatal(err)
-	}
-	dir := t.TempDir()
-	if err := os.Chdir(dir); err != nil {
-		t.Fatal(err)
-	}
-	t.Cleanup(func() { os.Chdir(orig) })
-
-	captureOutput(func() {
-		route([]string{"task", "create", "--subject=test"}, "dev", nil, taskCmd)
-	})
-
-	if _, err := os.Stat(filepath.Join(dir, ".lorah", "tasks.json")); err != nil {
-		t.Errorf("expected .lorah/tasks.json in %s, got %v", dir, err)
-	}
-}
-
-func TestRoute_UnknownCommand(t *testing.T) {
+// TestRoute_UnknownFlag verifies that a leading unknown flag is rejected with
+// a helpful error rather than being treated as a prompt file (loop.md §3 rule 4).
+func TestRoute_UnknownFlag(t *testing.T) {
 	var code int
 	_, stderr := captureOutput(func() {
-		code = route([]string{"unknown"}, "dev", nil, nil)
+		code = route([]string{"--nope"}, "dev", nil)
 	})
 	if code != 1 {
 		t.Errorf("expected exit 1, got %d", code)
 	}
-	if !strings.Contains(stderr, "Unknown command: unknown") {
-		t.Errorf("expected error message in stderr, got %q", stderr)
+	if !strings.Contains(stderr, "Unknown flag: --nope") {
+		t.Errorf("expected %q in stderr, got %q", "Unknown flag: --nope", stderr)
+	}
+	if !strings.Contains(stderr, "Usage:") {
+		t.Errorf("expected usage in stderr, got %q", stderr)
 	}
 }

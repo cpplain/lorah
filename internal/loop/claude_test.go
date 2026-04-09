@@ -5,6 +5,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -54,6 +55,21 @@ func helperClaudeFunc(extraEnv ...string) func(context.Context, string, ...strin
 		env := append(os.Environ(), "GO_TEST_HELPER_PROCESS=1")
 		cmd.Env = append(env, extraEnv...)
 		return cmd
+	}
+}
+
+// TestNewClaudeCmd_DetachesProcessGroup verifies the child is placed in its own
+// process group so terminal-generated SIGINT (Ctrl+C) does not reach it. Without
+// this, the tty delivers SIGINT to every process in the foreground pgrp and the
+// claude subprocess dies immediately, defeating "stop after current loop".
+func TestNewClaudeCmd_DetachesProcessGroup(t *testing.T) {
+	cmd := newClaudeCmd(context.Background(), []string{"--model", "x"})
+	if cmd.SysProcAttr == nil || !cmd.SysProcAttr.Setpgid {
+		t.Fatal("expected Setpgid=true so terminal SIGINT does not reach the child")
+	}
+	want := []string{"claude", "-p", "--output-format", "stream-json", "--verbose", "--model", "x"}
+	if !reflect.DeepEqual(cmd.Args, want) {
+		t.Errorf("args = %v, want %v", cmd.Args, want)
 	}
 }
 

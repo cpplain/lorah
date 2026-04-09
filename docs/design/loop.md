@@ -1,4 +1,4 @@
-# Run Command Specification
+# Loop Specification
 
 ---
 
@@ -6,20 +6,26 @@
 
 ### Purpose
 
-The `run` command executes Claude Code CLI in an infinite loop, piping a prompt file
-to each invocation and displaying formatted stream-JSON output in real-time.
-The loop runs until interrupted; the agent manages its own workflow.
+`lorah` executes Claude Code CLI in an infinite loop, piping a prompt file to each
+invocation and displaying formatted stream-JSON output in real-time. The loop runs
+until interrupted; the agent manages its own workflow.
 
 ### Goals
 
+- **Subcommand-free**: `lorah <prompt-file> [claude-flags...]`, unambiguous routing
+- **Thin router**: `main.go` is stdlib `switch` only, no business logic
 - **Infinite loop**: runs until Ctrl+C or SIGTERM, no iteration limit
 - **Error recovery**: failed iterations sleep and retry automatically
 - **Signal handling**: first Ctrl+C/SIGTERM stops after current loop; second triggers immediate exit
 - **Flag passthrough**: all arguments after the prompt file passed to `claude` unchanged
 - **Real-time output**: stream-JSON parsed and displayed as it arrives
+- **Helpful on error**: missing arguments explain correct usage
 
 ### Non-Goals
 
+- Subcommands (the binary does exactly one thing)
+- External flag parsing library (no cobra, no pflag)
+- Shell completion or typo suggestion
 - Configurable retry strategy (exponential backoff, max retries, jitter)
 - Session persistence across process restarts
 - Multiple concurrent Claude invocations
@@ -32,8 +38,17 @@ The loop runs until interrupted; the agent manages its own workflow.
 ### CLI
 
 ```
-lorah run <prompt-file> [claude-flags...]
+lorah <prompt-file> [claude-flags...]
 ```
+
+### Top-Level Flags
+
+| Flag        | Short | Description                     |
+| ----------- | ----- | ------------------------------- |
+| `--version` | `-V`  | Print version and exit 0        |
+| `--help`    | `-h`  | Show top-level usage and exit 0 |
+
+`--version` and `--help` are only recognized as `os.Args[1]`. They are not parsed anywhere else.
 
 ### Go Function
 
@@ -46,15 +61,74 @@ func Run(promptFile string, claudeFlags []string)
 
 `Run` is the only exported symbol from `internal/loop`.
 
-### Argument Handling (in `main.go`)
+---
 
-Argument validation for `run` is handled by `runCmd` in `main.go`.
-See [cli.md section 4](cli.md#4-router-implementation) for the full behavior.
-`runCmd` calls `loop.Run(promptFile, claudeFlags)` after validation.
+## 3. Routing
+
+### Routing Rules
+
+1. No arguments → print top-level usage, exit 1
+2. `args[0]` is `--version`, `-version`, or `-V` → print `lorah <version>`, exit 0
+3. `args[0]` is `--help`, `-help`, or `-h` → print top-level usage, exit 0
+4. Otherwise → `loop.Run(args[0], args[1:])`
+
+Any `args[0]` not matching a recognized flag is treated as a prompt file path. If the
+file cannot be opened, `loop.runClaude` returns an error and the loop's normal error
+recovery applies (see §4).
+
+### Version Output
+
+```
+lorah <version>
+```
+
+`Version` is `"dev"` by default; injected at build time via `-ldflags '-X main.Version=...'`.
+
+### Top-Level Usage (`lorah` or `lorah --help`)
+
+```
+Usage: lorah <prompt-file> [claude-flags...]
+
+Simple infinite-loop harness for Claude Code.
+
+Runs Claude Code CLI in a continuous loop with formatted output.
+Retries automatically on error with a 5-second delay.
+
+Arguments:
+  <prompt-file>      Path to prompt file (required)
+  [claude-flags...]  Flags passed directly to claude CLI
+
+Examples:
+  lorah prompt.md
+  lorah prompt.md --settings .lorah/settings.json
+  lorah prompt.md --model claude-opus-4-6 --max-turns 50
+
+Flags:
+  -V, --version    Print version and exit
+  -h, --help       Show this help message
+```
+
+### `main.go` Structure
+
+```go
+var Version = "dev"
+
+func main()         // os.Exit(route(os.Args[1:], Version, loop.Run))
+func route(...)     // the 4 routing rules above
+func printUsage()   // top-level help text
+```
+
+Nothing else. No signal handling, no loop logic, no output formatting — those live
+in `internal/loop`.
+
+### Flag Parsing
+
+Top-level routing uses a stdlib `switch` on `args[0]`. No external flag parsing
+library is used anywhere in the codebase.
 
 ---
 
-## 3. Loop Lifecycle
+## 4. Loop Lifecycle
 
 ### Constants
 
@@ -109,7 +183,7 @@ Retrying in 5s...
 
 ---
 
-## 4. Claude Code CLI Execution
+## 5. Claude Code CLI Execution
 
 ### Signature
 
@@ -144,7 +218,7 @@ func runClaude(ctx context.Context, promptFile string, flags []string) error
 
 ---
 
-## 5. Package Structure
+## 6. Package Structure
 
 ```
 internal/loop/
@@ -161,23 +235,36 @@ Splitting further would require exporting symbols with no reason to be public.
 
 ---
 
-## 6. Examples
+## 7. Exit Codes
+
+| Code | Meaning                                   |
+| ---- | ----------------------------------------- |
+| 0    | Success (including `--version`, `--help`) |
+| 1    | Runtime error or usage error              |
+
+---
+
+## 8. Examples
 
 ```sh
 # Basic usage
-lorah run prompt.md
+lorah prompt.md
 
 # With Claude settings file
-lorah run prompt.md --settings .lorah/settings.json
+lorah prompt.md --settings .lorah/settings.json
 
 # With specific model and turn limit
-lorah run prompt.md --model claude-opus-4-6 --max-turns 50
+lorah prompt.md --model claude-opus-4-6 --max-turns 50
 
 # With multiple flags
-lorah run prompt.md --settings settings.json --model claude-opus-4-6 --verbose
+lorah prompt.md --settings settings.json --model claude-opus-4-6 --verbose
 
-# Help
-lorah run --help
+# Version and help
+lorah --version
+lorah --help
+
+# Error cases
+lorah                      # shows usage, exits 1
 
 # First Ctrl+C → prints "Received interrupt, stopping after current loop...", exits 0 after iteration
 # Second Ctrl+C → prints "Received second interrupt, shutting down...", exits 0 immediately
@@ -185,8 +272,6 @@ lorah run --help
 
 ---
 
-## 7. Related Specifications
+## 9. Related Specifications
 
-- [cli.md](cli.md) — CLI routing and argument extraction for the `run` command
 - [output.md](output.md) — `printMessages` and `printSection` behavior
-- [task.md](task.md) — task management the agent uses within the run loop

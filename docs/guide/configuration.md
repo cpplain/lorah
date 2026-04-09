@@ -1,6 +1,6 @@
 # Guide: Configuration
 
-A `.lorah` directory contains the files that define a unit of work for the agent loop. It sits at the project root by default (overridable with Lorah's `--dir` flag). Commit `.lorah/` to git — the workflow depends on git history for state and continuity, and task files are committed as part of the loop.
+A `.lorah` directory contains the files that define a unit of work for the agent loop. It sits at the project root. Commit `.lorah/` to git — the workflow depends on git history for state and continuity, and task files are committed as part of the loop.
 
 ```
 .lorah/
@@ -60,7 +60,7 @@ Each task gets its own file in `.lorah/tasks/`. The planning agent creates one t
 `settings.json` is a standard Claude Code CLI settings file. Pass it via the `--settings` flag:
 
 ```sh
-lorah run prompt.md --settings .lorah/settings.json
+lorah prompt.md --settings .lorah/settings.json
 ```
 
 Common fields:
@@ -91,7 +91,7 @@ See the [Claude Code settings reference](https://code.claude.com/docs/en/setting
 Additional Claude CLI flags can be passed after the prompt file:
 
 ```sh
-lorah run prompt.md --settings .lorah/settings.json --model claude-opus-4-6 --max-turns 50
+lorah prompt.md --settings .lorah/settings.json --model claude-opus-4-6 --max-turns 50
 ```
 
 Flags are passed through to the `claude` CLI unchanged. Common flags:

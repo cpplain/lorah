@@ -4,12 +4,10 @@ Design documentation for `lorah`, a simple infinite-loop harness for Claude Code
 
 ## Index
 
-| Spec                   | Description                                                                    |
-| ---------------------- | ------------------------------------------------------------------------------ |
-| [cli.md](cli.md)       | Command-line interface: subcommands, routing, flags, help, version, exit codes |
-| [run.md](run.md)       | `run` command: loop lifecycle, signal handling, retry, subprocess execution    |
-| [output.md](output.md) | Output system: stream-JSON parsing, color-coded formatting, tool display       |
-| [task.md](task.md)     | `task` command: CRUD subcommands, JSON storage, agent integration              |
+| Spec                   | Description                                                              |
+| ---------------------- | ------------------------------------------------------------------------ |
+| [loop.md](loop.md)     | CLI routing, loop lifecycle, signal handling, subprocess execution       |
+| [output.md](output.md) | Output system: stream-JSON parsing, color-coded formatting, tool display |
 
 ## Glossary
 
@@ -19,7 +17,6 @@ Design documentation for `lorah`, a simple infinite-loop harness for Claude Code
 | **loop iteration** | One complete execution of the Claude Code CLI subprocess from start to finish              |
 | **stream-JSON**    | Newline-delimited JSON output by Claude Code CLI's `--output-format=stream-json` flag      |
 | **claude flags**   | Arguments passed through to the `claude` CLI unchanged after the prompt file               |
-| **task file**      | JSON file (`.lorah/tasks.json`) storing structured task data for agent workflow management |
 
 ## Design Principles
 

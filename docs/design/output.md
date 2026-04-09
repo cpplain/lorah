@@ -186,11 +186,10 @@ const (
 
 These constants are package-level in `internal/loop/constants.go` and shared
 across `loop.go`, `claude.go`, and `output.go`. `retryDelay` is also defined
-in `constants.go` but is a loop concern — see [run.md](run.md).
+in `constants.go` but is a loop concern — see [loop.md](loop.md).
 
 ---
 
 ## 8. Related Specifications
 
-- [run.md](run.md) — loop lifecycle that drives `printMessages` and status messages
-- [cli.md](cli.md) — CLI structure and entry point
+- [loop.md](loop.md) — loop lifecycle that drives `printMessages`, CLI structure and entry point

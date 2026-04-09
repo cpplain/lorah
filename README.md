@@ -1,6 +1,6 @@
 # Lorah
 
-**LO**ng-**R**unning **A**gent **H**arness
+**Lo**ng-**R**unning **A**gent **H**arness
 
 An infinite-loop harness for Claude Code CLI following the [Ralph technique](https://ghuntley.com/ralph/).
 
@@ -37,7 +37,6 @@ Plus automatic error recovery, graceful shutdown, and full Claude Code CLI compa
 - **Simple infinite loop** - Runs continuously until you stop it
 - **Automatic error recovery** - Retries on failures with 5-second delay
 - **Flag passthrough** - All Claude Code CLI flags work transparently
-- **Task management** - Structured task tracking for agent workflow coordination
 
 ## Prerequisites
 
@@ -58,26 +57,15 @@ Learn more about the Ralph technique: [Ralph Wiggum as a "software engineer"](ht
 **Syntax:**
 
 ```bash
-lorah <command> [arguments]
+lorah <prompt-file> [claude-flags...]
 ```
 
 **Run loop:**
 
 ```bash
-lorah run PROMPT.md
-lorah run PROMPT.md --settings .lorah/settings.json
-lorah run PROMPT.md --model claude-opus-4-6 --max-turns 50
-```
-
-**Task management:**
-
-```bash
-lorah task list --status=pending
-lorah task get <id>
-lorah task create --subject="Fix auth bug"
-lorah task update <id> --status=completed
-lorah task delete <id>
-lorah task export
+lorah PROMPT.md
+lorah PROMPT.md --settings .lorah/settings.json
+lorah PROMPT.md --model claude-opus-4-6 --max-turns 50
 ```
 
 ## License
